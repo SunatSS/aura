@@ -17,8 +17,7 @@
     // Публичный адрес сайта — для canonical, sitemap и Open Graph
     "SITE_URL": "https://aura.free-edu.workers.dev",
     // Вход через Google: Client ID не секрет. Секрет — GOOGLE_CLIENT_SECRET (в секретах Worker'а).
-    // Пока ID пустой, кнопка Google показывается как «скоро».
-    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_CLIENT_ID": "1019406872656-gbj6k8mfb46if90u4hq6atk7ek6k89dm.apps.googleusercontent.com",
     // Основная модель Workers AI и её цена в нейронах за 1M токенов (см. Workers AI pricing)
     "AI_MODEL": "@cf/google/gemma-4-26b-a4b-it",
     "AI_NEURONS_PER_M_INPUT": "9091",
