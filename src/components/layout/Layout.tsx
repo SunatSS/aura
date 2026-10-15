@@ -21,7 +21,7 @@ export function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
 }
 
 function Header() {
-  const { user, logout } = useStore();
+  const { user, logout, loading } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -42,10 +42,10 @@ function Header() {
           <NavLink to="/dashboard" className="chip">Трекер</NavLink>
         </nav>
         <div className="header__actions">
-          {user ? (
+          {loading ? null : user ? (
             <>
               <Link to="/dashboard" className="btn btn--lime btn--sm">Мой трекер</Link>
-              <button className="btn btn--sm header__logout" onClick={logout}>Выйти</button>
+              <button className="btn btn--sm header__logout" onClick={() => logout().then(() => navigate('/'))}>Выйти</button>
             </>
           ) : (
             <>
@@ -89,7 +89,7 @@ function Footer() {
     <footer className="footer">
       <div className="container footer__row">
         <Logo />
-        <p className="footer__text">0 $ комиссий. Только прямые ссылки на первоисточники. Школьный проект, MVP.</p>
+        <p className="footer__text">0 $ комиссий. Только прямые ссылки на первоисточники. Школьный проект.</p>
         <nav className="footer__nav">
           <Link to="/catalog">Каталог</Link>
           <Link to="/guides">Гайды</Link>
@@ -100,10 +100,21 @@ function Footer() {
   );
 }
 
+function ErrorBanner() {
+  const { error } = useStore();
+  if (!error) return null;
+  return (
+    <div className="error-banner" role="alert">
+      <div className="container">{error}</div>
+    </div>
+  );
+}
+
 export function Layout() {
   return (
     <>
       <Header />
+      <ErrorBanner />
       <main>
         <Outlet />
       </main>

@@ -170,3 +170,14 @@
   text-decoration: none;
   font-weight: 600;
 }
+
+/* ---------- Ошибка синхронизации ---------- */
+
+.error-banner {
+  background: var(--red);
+  color: var(--white);
+  border-bottom: var(--border);
+  padding: 8px 0;
+  font-weight: 600;
+  font-size: 14px;
+}

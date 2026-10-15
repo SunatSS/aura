@@ -49,9 +49,15 @@ export default function Onboarding() {
     setStep((s) => s + 1);
   };
 
-  const finish = (skipScores = false) => {
-    saveProfile(skipScores ? { ...draft, ielts: undefined, gpa: undefined, sat: undefined } : draft);
-    navigate('/dashboard');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const finish = async (skipScores = false) => {
+    setBusy(true);
+    const err = await saveProfile(skipScores ? { ...draft, ielts: undefined, gpa: undefined, sat: undefined } : draft);
+    setBusy(false);
+    if (err) setError(err);
+    else navigate('/dashboard');
   };
 
   return (
@@ -92,9 +98,12 @@ export default function Onboarding() {
                 <input className="input" inputMode="numeric" placeholder="1350" value={draft.sat ?? ''} onChange={(e) => setDraft({ ...draft, sat: e.target.value })} />
               </label>
             </div>
+            {error && <p className="auth__error" role="alert">{error}</p>}
             <div className="quiz__actions">
-              <button className="btn" onClick={() => finish(true)}>Пропустить</button>
-              <button className="btn btn--lime btn--lg" onClick={() => finish()}>Собрать дашборд →</button>
+              <button className="btn" disabled={busy} onClick={() => finish(true)}>Пропустить</button>
+              <button className="btn btn--lime btn--lg" disabled={busy} onClick={() => finish()}>
+                {busy ? 'Сохраняем…' : 'Собрать дашборд →'}
+              </button>
             </div>
           </>
         )}

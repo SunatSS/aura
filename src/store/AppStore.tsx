@@ -1,51 +1,22 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { api, ApiError } from '../api/client';
+import type { MeResponse, Profile, TrackerItem, User } from '../api/types';
 
-// MVP без бэкенда: всё состояние живёт в localStorage браузера.
-// Пароли не хешируются и никуда не отправляются — это демо, не настоящая авторизация.
+// Состояние пользователя живёт на сервере (Cloudflare Worker + D1).
+// Здесь — кэш ответа /api/me и оптимистичные обновления трекера.
 
-export type Profile = {
-  degree?: 'bachelor' | 'master';
-  stage?: 'preparing' | 'applying' | 'admitted';
-  funding?: 'full' | 'self';
-  ielts?: string;
-  gpa?: string;
-  sat?: string;
-};
+export type { Profile, TrackerItem, User };
 
-export type User = { name: string; email: string; provider: 'email' | 'google' };
-
-export type TrackerItem = {
-  countryId: string;
-  addedAt: string;
-  done: string[]; // отмеченные документы чек-листа
-  submitted: boolean;
-};
-
-type State = {
-  user: User | null;
-  accounts: Record<string, { name: string; password: string }>;
-  profile: Profile | null;
-  tracker: TrackerItem[];
-};
-
-const STORAGE_KEY = 'aura-state-v1';
-const empty: State = { user: null, accounts: {}, profile: null, tracker: [] };
-
-function load(): State {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...empty, ...JSON.parse(raw) } : empty;
-  } catch {
-    return empty;
-  }
-}
+type State = { user: User | null; profile: Profile | null; tracker: TrackerItem[] };
+const empty: State = { user: null, profile: null, tracker: [] };
 
 type Store = State & {
-  register: (name: string, email: string, password: string) => string | null;
-  login: (email: string, password: string) => string | null;
-  loginWithGoogle: () => void;
-  logout: () => void;
-  saveProfile: (p: Profile) => void;
+  loading: boolean;
+  error: string | null;
+  register: (name: string, email: string, password: string) => Promise<string | null>;
+  login: (email: string, password: string) => Promise<string | null>;
+  logout: () => Promise<void>;
+  saveProfile: (p: Profile) => Promise<string | null>;
   toggleTracked: (countryId: string) => void;
   isTracked: (countryId: string) => boolean;
   toggleDoc: (countryId: string, doc: string) => void;
@@ -54,69 +25,92 @@ type Store = State & {
 
 const Ctx = createContext<Store | null>(null);
 
+const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Что-то пошло не так.');
+
 export function AppStoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(load);
+  const [state, setState] = useState<State>(empty);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // приватный режим / заблокированное хранилище — работаем без сохранения
-    }
-  }, [state]);
+    api
+      .me()
+      .then((me) => setState(me))
+      .catch((e) => {
+        if (!(e instanceof ApiError && e.status === 401)) setError(message(e));
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Оптимистичное обновление: сразу меняем UI, при ошибке сервера откатываем
+  const optimistic = useCallback((change: (s: State) => State, call: () => Promise<unknown>) => {
+    const before = stateRef.current;
+    setState(change(before));
+    setError(null);
+    call().catch((e) => {
+      setState(before);
+      setError(message(e));
+    });
+  }, []);
+
+  const signedIn = (me: MeResponse) => {
+    setState(me);
+    setError(null);
+    return null;
+  };
 
   const store = useMemo<Store>(() => {
-    const updateItem = (countryId: string, fn: (i: TrackerItem) => TrackerItem) =>
-      setState((s) => ({ ...s, tracker: s.tracker.map((i) => (i.countryId === countryId ? fn(i) : i)) }));
+    const patchItem = (countryId: string, fn: (i: TrackerItem) => TrackerItem) => (s: State) => ({
+      ...s,
+      tracker: s.tracker.map((i) => (i.countryId === countryId ? fn(i) : i)),
+    });
+    const find = (countryId: string) => state.tracker.find((i) => i.countryId === countryId);
 
     return {
       ...state,
-      register(name, email, password) {
-        const key = email.trim().toLowerCase();
-        if (state.accounts[key]) return 'Аккаунт с таким email уже есть — войди.';
-        setState((s) => ({
-          ...s,
-          accounts: { ...s.accounts, [key]: { name, password } },
-          user: { name, email: key, provider: 'email' },
-          profile: null,
-        }));
-        return null;
+      loading,
+      error,
+      register: (name, email, password) => api.register(name, email, password).then(signedIn, message),
+      login: (email, password) => api.login(email, password).then(signedIn, message),
+      async logout() {
+        await api.logout().catch(() => undefined);
+        setState(empty);
       },
-      login(email, password) {
-        const key = email.trim().toLowerCase();
-        const acc = state.accounts[key];
-        if (!acc || acc.password !== password) return 'Неверный email или пароль.';
-        setState((s) => ({ ...s, user: { name: acc.name, email: key, provider: 'email' } }));
-        return null;
-      },
-      loginWithGoogle() {
-        setState((s) => ({ ...s, user: { name: 'Демо-студент', email: 'demo@gmail.com', provider: 'google' } }));
-      },
-      logout() {
-        setState((s) => ({ ...s, user: null }));
-      },
-      saveProfile(profile) {
-        setState((s) => ({ ...s, profile }));
-      },
-      isTracked: (id) => state.tracker.some((i) => i.countryId === id),
+      saveProfile: (profile) =>
+        api.saveProfile(profile).then(
+          (r) => {
+            setState((s) => ({ ...s, profile: r.profile }));
+            return null;
+          },
+          message,
+        ),
+      isTracked: (id) => !!find(id),
       toggleTracked(countryId) {
-        setState((s) =>
-          s.tracker.some((i) => i.countryId === countryId)
-            ? { ...s, tracker: s.tracker.filter((i) => i.countryId !== countryId) }
-            : { ...s, tracker: [...s.tracker, { countryId, addedAt: new Date().toISOString(), done: [], submitted: false }] },
-        );
+        if (find(countryId)) {
+          optimistic((s) => ({ ...s, tracker: s.tracker.filter((i) => i.countryId !== countryId) }), () => api.removeTracked(countryId));
+        } else {
+          optimistic(
+            (s) => ({ ...s, tracker: [...s.tracker, { countryId, addedAt: new Date().toISOString(), done: [], submitted: false }] }),
+            () => api.addTracked(countryId),
+          );
+        }
       },
       toggleDoc(countryId, doc) {
-        updateItem(countryId, (i) => ({
-          ...i,
-          done: i.done.includes(doc) ? i.done.filter((d) => d !== doc) : [...i.done, doc],
-        }));
+        const item = find(countryId);
+        if (!item) return;
+        const done = item.done.includes(doc) ? item.done.filter((d) => d !== doc) : [...item.done, doc];
+        optimistic(patchItem(countryId, (i) => ({ ...i, done })), () => api.updateTracked(countryId, { done }));
       },
       toggleSubmitted(countryId) {
-        updateItem(countryId, (i) => ({ ...i, submitted: !i.submitted }));
+        const item = find(countryId);
+        if (!item) return;
+        const submitted = !item.submitted;
+        optimistic(patchItem(countryId, (i) => ({ ...i, submitted })), () => api.updateTracked(countryId, { submitted }));
       },
     };
-  }, [state]);
+  }, [state, loading, error, optimistic]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }
