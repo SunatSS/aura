@@ -1,0 +1,258 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding-top: 56px;
+  padding-bottom: 64px;
+}
+
+.hero__title {
+  font-size: clamp(26px, 4.2vw, 56px);
+  text-transform: uppercase;
+  line-height: 1.12;
+  margin-bottom: 24px;
+}
+
+.hero__pill {
+  display: inline-block;
+  background: var(--lime);
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 var(--ink);
+  padding: 2px 14px;
+  margin-top: 8px;
+}
+
+.hero__lead {
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+.hero-tracker {
+  border: 2px dashed var(--ink);
+  border-radius: 20px;
+  background: var(--white);
+  padding: 22px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.hero-tracker--filled {
+  border-style: solid;
+}
+
+.hero-tracker__title {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+}
+
+.hero-tracker__spacer {
+  flex: 1;
+}
+
+.hero-tracker__hint {
+  font-size: 12px;
+  color: #555;
+}
+
+.hero-tracker__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.hero-tracker__list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: var(--border);
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-weight: 600;
+}
+
+.hero-tracker__list small {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; padding-top: 36px; }
+  .hero-tracker { min-height: 220px; }
+}
+
+/* полоса доверия */
+
+.trust {
+  background: var(--ink);
+  color: var(--white);
+  padding: 32px 0;
+}
+
+.trust__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  text-align: center;
+}
+
+.trust__item strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 40px;
+  color: var(--lime);
+  line-height: 1.1;
+}
+
+.trust__label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--lime);
+  margin: 4px 0 8px;
+}
+
+.trust__item p {
+  font-size: 13px;
+  color: #d9d9d9;
+}
+
+@media (max-width: 720px) {
+  .trust__row { grid-template-columns: 1fr; }
+}
+
+/* блоки */
+
+.block {
+  padding-top: 80px;
+  padding-bottom: 16px;
+}
+
+.block:last-of-type {
+  padding-bottom: 64px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .features { grid-template-columns: 1fr; }
+}
+
+.feature,
+.step {
+  padding: 18px 20px;
+  position: relative;
+}
+
+.feature__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.feature__icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border: var(--border);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.feature h3,
+.step h3 {
+  font-size: 18px;
+}
+
+.feature p,
+.step p {
+  font-size: 13px;
+  color: #444;
+}
+
+.step {
+  padding-top: 26px;
+}
+
+.step__num {
+  position: absolute;
+  top: -15px;
+  left: 16px;
+}
+
+.step h3 {
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: var(--border);
+}
+
+.eyebrow {
+  display: inline-block;
+  color: var(--orange);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  border-top: 2px solid var(--orange);
+  padding-top: 6px;
+  margin-bottom: 24px;
+}
+
+.landing-h2 {
+  font-size: clamp(28px, 4.4vw, 44px);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.landing-sub {
+  max-width: 420px;
+  margin-bottom: 32px;
+  font-size: 14px;
+}
+
+.show-all {
+  margin-top: 32px;
+}
+
+.guide-links {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2.2vw, 22px);
+}
+
+.guide-link:hover {
+  background: var(--lime);
+}
