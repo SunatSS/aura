@@ -74,7 +74,7 @@ function neuronCost(env: Env, inputTokens: number, outputTokens: number) {
 type WorkersAiResponse = {
   response?: string;
   choices?: { message?: { content?: string } }[];
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  usage?: { prompt_tokens?: number; completion_tokens?: number; neurons?: number };
 };
 
 async function runWorkersAi(env: Env, input: ChatInput) {
@@ -92,7 +92,8 @@ async function runWorkersAi(env: Env, input: ChatInput) {
   const text = res.choices?.[0]?.message?.content ?? res.response ?? '';
   const inTok = res.usage?.prompt_tokens ?? estimateTokens(input.system + input.user);
   const outTok = res.usage?.completion_tokens ?? estimateTokens(text);
-  return { text, neurons: neuronCost(env, inTok, outTok) };
+  // Workers AI сам сообщает потраченные нейроны; если поля нет — считаем по прайсу
+  return { text, neurons: res.usage?.neurons ?? neuronCost(env, inTok, outTok) };
 }
 
 async function runGemini(env: Env, input: ChatInput) {

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client';
 import type { AiQuota, CvPack, EssayReview, FaqAnswer } from '../api/types';
+import { Rich } from '../components/content/ContentPageView';
 import './mentor.css';
 
 type Tab = 'essay' | 'cv' | 'faq';
@@ -212,7 +213,7 @@ function FaqTab({ onQuota }: { onQuota: (q: AiQuota) => void }) {
             <p className="faq__q">{m.q}</p>
             {m.a ? (
               <div className="faq__a">
-                <p className="faq__text">{m.a.answer}</p>
+                <p className="faq__text"><Rich text={m.a.answer} /></p>
                 {m.a.sources.length > 0 && (
                   <p className="faq__sources">
                     Источники: {m.a.sources.map((s, n) => <Link key={n} to={s.path}>{s.title}</Link>)}
