@@ -28,9 +28,10 @@ export function CountryCard({ country }: { country: Country }) {
           className={`country-card__star ${tracked ? 'is-on' : ''}`}
           onClick={onStar}
           aria-pressed={tracked}
+          aria-label={tracked ? `Убрать «${country.name}» из трекера` : `Добавить «${country.name}» в трекер`}
           title={tracked ? 'Убрать из трекера' : 'Добавить в трекер'}
         >
-          {tracked ? '★' : '☆'}
+          <span aria-hidden="true">{tracked ? '★' : '☆'}</span>
         </button>
       </div>
       <h3 className="country-card__name">
@@ -40,7 +41,7 @@ export function CountryCard({ country }: { country: Country }) {
       <p className="country-card__meta">
         <strong>{country.grant}</strong> <span>{country.tags}</span>
       </p>
-      <Link to={`/country/${country.id}`} className="country-card__more">
+      <Link to={`/country/${country.id}`} className="country-card__more" aria-label={`Узнать больше: ${country.name}, ${country.grant}`}>
         Узнать больше о стране <span aria-hidden="true">›</span>
       </Link>
     </article>

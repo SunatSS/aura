@@ -1,4 +1,4 @@
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, useId, useState, type ReactNode } from 'react';
 import type { Block, ContentPage, Section } from '../../data/types';
 import './content.css';
 
@@ -18,17 +18,18 @@ export function Rich({ text }: { text: string }) {
 
 function Accordion({ items }: { items: Extract<Block, { type: 'accordion' }>['items'] }) {
   const [open, setOpen] = useState<number | null>(0);
+  const id = useId();
   return (
     <div className="stack">
       {items.map((it, i) => (
         <div key={it.title} className={`acc ${open === i ? 'is-open' : ''}`}>
-          <button className="acc__head" onClick={() => setOpen(open === i ? null : i)} aria-expanded={open === i}>
-            <span className="badge">{i + 1}</span>
+          <button className="acc__head" onClick={() => setOpen(open === i ? null : i)} aria-expanded={open === i} aria-controls={`${id}-${i}`}>
+            <span className="badge" aria-hidden="true">{i + 1}</span>
             <span className="acc__title">{it.title}</span>
             <span className="acc__chevron" aria-hidden="true">⌃</span>
           </button>
           {open === i && (
-            <div className="acc__body">
+            <div className="acc__body" id={`${id}-${i}`}>
               <p><Rich text={it.text} /></p>
               {it.bullets && <ul>{it.bullets.map((b) => <li key={b}>{b}</li>)}</ul>}
             </div>
@@ -129,7 +130,12 @@ export function BlockView({ block }: { block: Block }): ReactNode {
       return (
         <ul className="c-links">
           {block.items.map((l) => (
-            <li key={l.url}><a href={l.url} target="_blank" rel="noreferrer">{l.label} ↗</a></li>
+            <li key={l.url}>
+              <a href={l.url} target="_blank" rel="noreferrer">
+                {l.label} <span aria-hidden="true">↗</span>
+                <span className="visually-hidden"> (откроется в новой вкладке)</span>
+              </a>
+            </li>
           ))}
         </ul>
       );
@@ -195,12 +201,12 @@ export function BlockView({ block }: { block: Block }): ReactNode {
 
 function SectionView({ section }: { section: Section }) {
   return (
-    <section id={section.id} className="c-section">
+    <section id={section.id} className="c-section" aria-labelledby={`${section.id}-title`}>
       <div className="c-section__kicker">
-        <span className="badge">{section.badge}</span>
+        <span className="badge" aria-hidden="true">{section.badge}</span>
         <span>{section.kicker}</span>
       </div>
-      <h2 className="c-section__title">{section.title}</h2>
+      <h2 className="c-section__title" id={`${section.id}-title`}>{section.title}</h2>
       <div className="c-section__body">
         {section.blocks.map((b, i) => <BlockView key={i} block={b} />)}
       </div>

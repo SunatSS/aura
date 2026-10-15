@@ -91,3 +91,18 @@ export async function updateTrackerItem(db: D1Database, userId: string, countryI
     .first<TrackerRow>();
   return row ? toItem(row) : null;
 }
+
+// ---------- OAuth ----------
+
+export const userByOAuth = (db: D1Database, provider: string, subject: string) =>
+  db
+    .prepare('SELECT u.id, u.email, u.name FROM oauth_accounts o JOIN users u ON u.id = o.user_id WHERE o.provider = ? AND o.subject = ?')
+    .bind(provider, subject)
+    .first<User>();
+
+export async function linkOAuth(db: D1Database, provider: string, subject: string, userId: string, email: string) {
+  await db
+    .prepare('INSERT OR IGNORE INTO oauth_accounts (provider, subject, user_id, email) VALUES (?, ?, ?, ?)')
+    .bind(provider, subject, userId, email)
+    .run();
+}

@@ -66,7 +66,7 @@ export default function Landing() {
         <HeroTracker />
       </section>
 
-      <section className="trust">
+      <section className="trust" aria-label="Факты об AURA">
         <div className="container trust__row">
           <div className="trust__item">
             <strong>18+</strong>
@@ -92,7 +92,7 @@ export default function Landing() {
           {features.map((f) => (
             <div key={f.title} className="feature card">
               <div className="feature__head">
-                <span className="feature__icon" style={{ background: f.color }}>{f.icon}</span>
+                <span className="feature__icon" style={{ background: f.color }} aria-hidden="true">{f.icon}</span>
                 <h3>{f.title}</h3>
               </div>
               <p>{f.text}</p>
@@ -106,7 +106,7 @@ export default function Landing() {
         <div className="features">
           {steps.map((s, i) => (
             <div key={s.title} className="step card">
-              <span className="badge badge--orange step__num">{i + 1}</span>
+              <span className="badge badge--orange step__num" aria-hidden="true">{i + 1}</span>
               <h3>{s.title}</h3>
               <p>{s.text}</p>
             </div>

@@ -24,9 +24,9 @@ function itemProgress(item: TrackerItem, c: Country) {
   return Math.round(((item.done.filter((d) => docs.includes(d)).length + (item.submitted ? 1 : 0)) / (docs.length + 1)) * 100);
 }
 
-function ProgressBar({ value }: { value: number }) {
+function ProgressBar({ value, label }: { value: number; label: string }) {
   return (
-    <div className="progress" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+    <div className="progress" role="progressbar" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
       <div className="progress__fill" style={{ width: `${value}%`, borderRightWidth: value > 0 && value < 100 ? 2 : 0 }} />
       <span className="progress__label">{value}%</span>
     </div>
@@ -49,7 +49,7 @@ function ProgramCard({ item, country }: { item: TrackerItem; country: Country })
         </div>
         <button className="program__remove" onClick={() => toggleTracked(country.id)} title="Убрать из трекера" aria-label={`Убрать ${country.name} из трекера`}>✕</button>
       </div>
-      <ProgressBar value={pct} />
+      <ProgressBar value={pct} label={`Готовность заявки: ${country.name}`} />
       <div className="program__actions">
         <button className="btn btn--sm" onClick={() => setOpen(!open)} aria-expanded={open}>
           {open ? 'Скрыть чек-лист' : `Чек-лист документов (${item.done.length}/${docs.length})`}
@@ -120,15 +120,15 @@ export default function Dashboard() {
         <div className="dash__overall card">
           <span className="dash__overall-label">Прогресс поступления</span>
           <strong>{overall}%</strong>
-          <ProgressBar value={overall} />
+          <ProgressBar value={overall} label="Общий прогресс поступления" />
           <small>{tracked.length ? `${tracked.length} программ в трекере` : 'Добавь первую программу'}</small>
         </div>
       </div>
 
       <ol className="stages">
         {stages.map((s, i) => (
-          <li key={s.id} className={`stage card ${i === stageIdx ? 'is-current' : ''} ${i < stageIdx ? 'is-done' : ''}`}>
-            <span className="stage__num">{s.num}</span>
+          <li key={s.id} className={`stage card ${i === stageIdx ? 'is-current' : ''} ${i < stageIdx ? 'is-done' : ''}`} aria-current={i === stageIdx ? 'step' : undefined}>
+            <span className="stage__num" aria-hidden="true">{s.num}</span>
             <div>
               <h3>{s.title}</h3>
               <p>{s.text}</p>

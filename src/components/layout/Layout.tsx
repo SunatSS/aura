@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/AppStore';
 import './layout.css';
@@ -26,6 +26,14 @@ function Header() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
 
+  // Escape закрывает мобильное меню
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
   const search = (e: FormEvent) => {
     e.preventDefault();
     navigate(`/catalog${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ''}`);
@@ -36,7 +44,7 @@ function Header() {
     <header className="header">
       <div className="container header__row">
         <Logo />
-        <nav className={`header__nav ${open ? 'is-open' : ''}`} onClick={() => setOpen(false)}>
+        <nav id="main-nav" aria-label="Основное меню" className={`header__nav ${open ? 'is-open' : ''}`} onClick={() => setOpen(false)}>
           <NavLink to="/catalog" className="chip">Каталог программ</NavLink>
           <NavLink to="/guides" className="chip">Гайды</NavLink>
           <NavLink to="/dashboard" className="chip">Трекер</NavLink>
@@ -54,19 +62,26 @@ function Header() {
               <Link to="/register" className="btn btn--orange btn--sm">Зарегистрироваться</Link>
             </>
           )}
-          <button className="header__burger btn btn--sm" aria-label="Меню" aria-expanded={open} onClick={() => setOpen(!open)}>
-            ☰
+          <button
+            className="header__burger btn btn--sm"
+            aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
+            aria-expanded={open}
+            aria-controls="main-nav"
+            onClick={() => setOpen(!open)}
+          >
+            <span aria-hidden="true">{open ? '✕' : '☰'}</span>
           </button>
         </div>
       </div>
       <form className="container header__search" onSubmit={search} role="search">
         <span className="header__search-icon" aria-hidden="true">⌕</span>
         <input
+          type="search"
           className="header__search-input"
           placeholder="Поиск по странам и грантам: Корея, DAAD, полный грант…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          aria-label="Поиск по странам"
+          aria-label="Поиск по странам и грантам"
         />
       </form>
     </header>
@@ -91,7 +106,7 @@ function Footer() {
       <div className="container footer__row">
         <Logo />
         <p className="footer__text">0 $ комиссий. Только прямые ссылки на первоисточники. Школьный проект.</p>
-        <nav className="footer__nav">
+        <nav className="footer__nav" aria-label="Ссылки в подвале">
           <Link to="/catalog">Каталог</Link>
           <Link to="/guides">Гайды</Link>
           <Link to="/dashboard">Трекер</Link>
@@ -114,9 +129,10 @@ function ErrorBanner() {
 export function Layout() {
   return (
     <>
+      <a className="skip-link" href="#main">Перейти к содержимому</a>
       <Header />
       <ErrorBanner />
-      <main>
+      <main id="main" tabIndex={-1}>
         <Outlet />
       </main>
       <Footer />

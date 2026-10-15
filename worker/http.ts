@@ -1,10 +1,10 @@
 // Общие помощники для роутов API.
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
+import { getCookie, setCookie } from 'hono/cookie';
 import { createMiddleware } from 'hono/factory';
 import type { User } from '../src/api/types';
-import { SESSION_COOKIE, hashToken } from './auth';
-import { userBySession } from './db';
+import { SESSION_COOKIE, SESSION_TTL_MS, hashToken, randomHex } from './auth';
+import { createSession, userBySession } from './db';
 
 export type AppEnv = { Bindings: Env; Variables: { user: User } };
 
@@ -26,3 +26,17 @@ export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
   c.set('user', user);
   await next();
 });
+
+export async function startSession(c: Context<AppEnv>, userId: string) {
+  const token = randomHex(32);
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  await createSession(c.env.DB, await hashToken(token), userId, expiresAt);
+  setCookie(c, SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: SESSION_TTL_MS / 1000,
+  });
+}
+

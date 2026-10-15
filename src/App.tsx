@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { type ReactNode } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { AppStoreProvider, useStore } from './store/AppStore';
 import { Login, Register } from './pages/Auth';
@@ -11,18 +11,11 @@ import Landing from './pages/Landing';
 import Mentor from './pages/Mentor';
 import NotFound from './pages/NotFound';
 import Onboarding from './pages/Onboarding';
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
-}
+import { RouteEffects } from './seo/RouteEffects';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useStore();
-  if (loading) return <div className="container page muted">Загружаем…</div>;
+  if (loading) return <div className="container page muted" role="status">Загружаем…</div>;
   return user ? children : <Navigate to="/login" replace />;
 }
 
@@ -30,7 +23,7 @@ export default function App() {
   return (
     <AppStoreProvider>
       <BrowserRouter>
-        <ScrollToTop />
+        <RouteEffects />
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Landing />} />

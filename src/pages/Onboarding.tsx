@@ -28,6 +28,7 @@ function Choice<K extends keyof Profile>({ options, value, onPick }: { options: 
         <button
           key={String(o.value)}
           className={`quiz__option card ${value === o.value ? 'is-picked' : ''}`}
+          aria-pressed={value === o.value}
           onClick={() => onPick(o.value)}
         >
           <strong>{o.label}</strong>
@@ -68,9 +69,10 @@ export default function Onboarding() {
 
       <ol className="quiz__progress" aria-label="Шаги квиза">
         {steps.map((s, i) => (
-          <li key={s} className={i < step ? 'is-done' : i === step ? 'is-current' : ''}>
+          <li key={s} className={i < step ? 'is-done' : i === step ? 'is-current' : ''} aria-current={i === step ? 'step' : undefined}>
             <button onClick={() => i <= step && setStep(i)} disabled={i > step}>
-              <span className="badge">{i < step ? '✓' : i + 1}</span> {s}
+              <span className="badge" aria-hidden="true">{i < step ? '✓' : i + 1}</span> {s}
+              {i < step && <span className="visually-hidden"> (готово)</span>}
             </button>
           </li>
         ))}

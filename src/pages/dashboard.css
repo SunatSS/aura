@@ -92,7 +92,7 @@
 .stage__num {
   font-family: var(--font-display);
   font-size: 28px;
-  color: #bbb;
+  color: #8a8a8a;
 }
 
 .stage h3 {
@@ -306,7 +306,7 @@
 }
 
 .timeline li.is-hot .timeline__days {
-  background: var(--orange);
+  background: var(--orange-strong);
   color: var(--white);
 }
 

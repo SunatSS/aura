@@ -25,6 +25,11 @@ export async function hashPassword(password: string) {
 }
 
 export async function verifyPassword(password: string, hashHex: string, saltHex: string) {
+  // У аккаунтов, созданных через Google, пароля нет — считаем хеш всё равно, чтобы время ответа не отличалось
+  if (!hashHex || !saltHex) {
+    await pbkdf2(password, new Uint8Array(16));
+    return false;
+  }
   const actual = await pbkdf2(password, fromHex(saltHex));
   const expected = fromHex(hashHex);
   if (actual.length !== expected.length) return false;
@@ -38,4 +43,15 @@ export async function verifyPassword(password: string, hashHex: string, saltHex:
 // утечка таблицы sessions не даёт войти под пользователем.
 export async function hashToken(token: string) {
   return toHex(await crypto.subtle.digest('SHA-256', enc.encode(token)));
+}
+
+// PKCE (RFC 7636) для OAuth: случайный verifier и его SHA-256 в base64url
+const base64url = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+export function pkceVerifier() {
+  return base64url(crypto.getRandomValues(new Uint8Array(32)));
+}
+
+export async function pkceChallenge(verifier: string) {
+  return base64url(new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(verifier))));
 }

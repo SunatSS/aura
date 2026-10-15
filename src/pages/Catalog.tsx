@@ -41,28 +41,31 @@ export default function Catalog() {
 
       <div className="filters">
         <input
+          type="search"
           className="input filters__search"
           placeholder="Страна или грант…"
           value={q}
           onChange={(e) => set('q', e.target.value || null)}
-          aria-label="Поиск"
+          aria-label="Поиск по странам и грантам"
         />
-        <div className="filters__chips">
+        <div className="filters__chips" role="group" aria-label="Фильтры">
           {degreeFilters.map((d) => (
             <button
               key={d.id}
               className={`chip ${degree === d.id ? 'chip--active' : ''}`}
+              aria-pressed={degree === d.id}
               onClick={() => set('degree', degree === d.id ? null : d.id)}
             >
               {d.label}
             </button>
           ))}
-          <button className={`chip ${full ? 'chip--active' : ''}`} onClick={() => set('full', full ? null : '1')}>
+          <button className={`chip ${full ? 'chip--active' : ''}`} aria-pressed={full} onClick={() => set('full', full ? null : '1')}>
             Полный грант
           </button>
         </div>
       </div>
 
+      <p className="visually-hidden" role="status" aria-live="polite">Найдено направлений: {list.length}</p>
       {list.length ? (
         <div className="country-grid">
           {list.map((c) => <CountryCard key={c.id} country={c} />)}

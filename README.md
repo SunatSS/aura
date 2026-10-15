@@ -31,6 +31,8 @@
 | POST | `/api/auth/register` | `{name, email, password}` |
 | POST | `/api/auth/login` | `{email, password}` |
 | POST | `/api/auth/logout` | |
+| GET | `/api/auth/providers` | `{google: bool}` — настроен ли вход через Google |
+| GET | `/api/auth/google/start` → `/callback` | вход через Google (OAuth 2.0 + PKCE) |
 | GET | `/api/me` | пользователь, анкета, трекер |
 | PUT | `/api/profile` | ответы квиза |
 | POST | `/api/tracker` | `{countryId}` |
@@ -42,6 +44,17 @@
 | POST | `/api/ai/faq` | `{question}` → ответ по базе AURA + источники |
 
 Пароли хешируются PBKDF2-SHA256, сессия — HttpOnly-cookie на 30 дней (в базе хранится только хеш токена).
+
+## Вход через Google
+
+1. Google Cloud Console → Google Auth Platform: экран согласия (External, scopes `openid email profile`),
+   затем **Clients → Web application** с redirect URI:
+   `https://aura.free-edu.workers.dev/api/auth/google/callback` и `http://localhost:5173/api/auth/google/callback`.
+2. Client ID — в `GOOGLE_CLIENT_ID` (`wrangler.jsonc`), Client Secret — секретом `GOOGLE_CLIENT_SECRET`
+   в Cloudflare (локально — в `.dev.vars`, см. `.dev.vars.example`).
+3. Пока приложение в режиме Testing, войти могут только тестовые пользователи из консоли Google; для всех — Publish app.
+
+Если почта из Google совпадает с уже зарегистрированной, аккаунты связываются (`oauth_accounts`).
 
 ## AI и лимиты
 
@@ -55,6 +68,26 @@
   На бесплатном тарифе Google может использовать запросы для улучшения моделей.
 - FAQ-бот ищет подходящие разделы в контенте сайта (`src/data/kb.ts`) и передаёт модели только их.
 - Промпты — `worker/prompts.ts`.
+
+## SEO
+
+- Сайт — SPA, но Worker (`worker/seo.ts`) подставляет в HTML каждой страницы свои `title`, `description`,
+  `canonical`, Open Graph / Twitter-карточку (`public/og.png`) и JSON-LD (WebSite, Organization, Article,
+  BreadcrumbList, ItemList). Поисковики и превью ссылок в мессенджерах видят правильные данные без выполнения JS.
+- Метаданные описаны в одном месте — `src/seo/meta.ts`; React обновляет их при переходах (`src/seo/RouteEffects.tsx`).
+- `/sitemap.xml` и `/robots.txt` генерируются из данных сайта. Личные страницы (`/dashboard`, `/mentor` и т.д.)
+  помечены `noindex`, несуществующие адреса отдают 404.
+- Адрес сайта для canonical и sitemap — `SITE_URL` в `wrangler.jsonc`.
+
+## Доступность
+
+- Ссылка «Перейти к содержимому», заметная рамка фокуса для клавиатуры (`:focus-visible`).
+- При переходе между страницами фокус переносится на основной контент, заголовок вкладки обновляется.
+- Цвета под белым текстом и цветной текст проверены на контраст WCAG AA (≥ 4.5:1).
+- ARIA: состояния фильтров и вариантов квиза (`aria-pressed`), аккордеоны (`aria-expanded`/`aria-controls`),
+  вкладки AI-ментора по паттерну WAI-ARIA Tabs (стрелки переключают вкладки), прогресс-бары и оценки с подписями,
+  живые области для результатов поиска и ответов бота.
+- Мобильное меню закрывается по Escape; уважается настройка «уменьшить движение».
 
 ## Локальный запуск
 

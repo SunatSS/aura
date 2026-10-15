@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client';
 import type { AiQuota, CvPack, EssayReview, FaqAnswer } from '../api/types';
@@ -48,8 +48,10 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
   return (
     <div className="score">
       <span>{label}</span>
-      <div className="score__bar"><div style={{ width: `${value * 10}%` }} /></div>
-      <strong>{value}/10</strong>
+      <div className="score__bar" role="meter" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={10}>
+        <div style={{ width: `${value * 10}%` }} />
+      </div>
+      <strong aria-hidden="true">{value}/10</strong>
     </div>
   );
 }
@@ -199,7 +201,7 @@ function FaqTab({ onQuota }: { onQuota: (q: AiQuota) => void }) {
 
   return (
     <div className="faq card">
-      <div className="faq__log" aria-live="polite">
+      <div className="faq__log" aria-live="polite" aria-label="Диалог с Бюрократом" role="log">
         {log.length === 0 && (
           <div className="faq__empty">
             <p>Спроси про документы, сроки, гранты или страны. Бюрократ отвечает только по базе AURA — если ответа там нет, он так и скажет.</p>
@@ -245,6 +247,19 @@ export default function Mentor() {
     api.aiQuota().then(setQuota).catch(() => undefined);
   }, []);
 
+  const select = (id: Tab) => setParams({ tab: id }, { replace: true });
+
+  // Стрелки влево/вправо переключают вкладки (паттерн WAI-ARIA Tabs)
+  const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = tabs.findIndex((t) => t.id === tab);
+    const next = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? i + 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? i - 1 : null;
+    if (next === null) return;
+    e.preventDefault();
+    const t = tabs[(next + tabs.length) % tabs.length];
+    select(t.id);
+    document.getElementById(`tab-${t.id}`)?.focus();
+  };
+
   const panels: Record<Tab, ReactNode> = {
     essay: <EssayTab onQuota={setQuota} />,
     cv: <CvTab onQuota={setQuota} />,
@@ -257,7 +272,7 @@ export default function Mentor() {
       <div className="mentor__head">
         <h1 className="landing-h2">Личный ментор без агентства</h1>
         {quota && (
-          <div className="quota card" title="Лимит обновляется каждый день в 00:00 UTC">
+          <div className="quota card" title="Лимит обновляется каждый день в 00:00 UTC" role="status">
             <strong>{Math.max(quota.limit - quota.used, 0)}</strong>
             <span>из {quota.limit} запросов<br />осталось сегодня</span>
           </div>
@@ -265,17 +280,27 @@ export default function Mentor() {
       </div>
       <p className="landing-sub">Бесплатные модели, честные советы. AURA не сохраняет тексты, которые ты сюда вставляешь.</p>
 
-      <div className="mentor__tabs" role="tablist">
+      <div className="mentor__tabs" role="tablist" aria-label="Инструменты AI-ментора" onKeyDown={onTabKey}>
         {tabs.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} className={`mentor__tab card ${tab === t.id ? 'is-active' : ''}`}
-            onClick={() => setParams({ tab: t.id }, { replace: true })}>
+          <button
+            key={t.id}
+            id={`tab-${t.id}`}
+            role="tab"
+            aria-selected={tab === t.id}
+            aria-controls={`panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
+            className={`mentor__tab card ${tab === t.id ? 'is-active' : ''}`}
+            onClick={() => select(t.id)}
+          >
             <strong>{t.title}</strong>
             <span>{t.hint}</span>
           </button>
         ))}
       </div>
 
-      {panels[tab]}
+      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {panels[tab]}
+      </div>
     </div>
   );
 }

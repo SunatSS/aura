@@ -1,17 +1,49 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useStore } from '../store/AppStore';
 import './pages.css';
 
+const GOOGLE_ERRORS: Record<string, string> = {
+  google_cancelled: 'Вход через Google отменён.',
+  google_state: 'Сессия входа устарела — попробуй ещё раз.',
+  google_failed: 'Google не подтвердил вход. Попробуй ещё раз или войди по email.',
+  google_unavailable: 'Вход через Google пока не настроен — войди по email.',
+};
+
+function GoogleButton() {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch('/api/auth/providers')
+      .then((r) => r.json())
+      .then((p: { google?: boolean }) => setEnabled(Boolean(p.google)))
+      .catch(() => setEnabled(false));
+  }, []);
+
+  if (enabled) {
+    // Обычный переход, не fetch: дальше браузер уходит на страницу Google и возвращается к нам
+    return (
+      <a className="btn btn--block" href="/api/auth/google/start">
+        <span className="google-g" aria-hidden="true">G</span> Продолжить с Google
+      </a>
+    );
+  }
+  return (
+    <button type="button" className="btn btn--block" disabled title="Вход через Google появится позже">
+      <span className="google-g" aria-hidden="true">G</span> Продолжить с Google {enabled === false && <span className="tag">скоро</span>}
+    </button>
+  );
+}
+
 function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+  const [params] = useSearchParams();
+  const googleError = GOOGLE_ERRORS[params.get('error') ?? ''];
   return (
     <div className="container auth">
       <div className="auth__card card">
         <h1 className="auth__title">{title}</h1>
         <p className="auth__subtitle">{subtitle}</p>
-        <button type="button" className="btn btn--block" disabled title="Вход через Google появится позже">
-          <span className="google-g" aria-hidden="true">G</span> Продолжить с Google <span className="tag">скоро</span>
-        </button>
+        {googleError && <p className="auth__error" role="alert">{googleError}</p>}
+        <GoogleButton />
         <div className="auth__divider"><span>или по email</span></div>
         {children}
         <p className="auth__demo">Номер телефона не нужен. Никакого спама.</p>
