@@ -1,8 +1,7 @@
 // База знаний для FAQ-бота: тот же контент, что показывает сайт,
 // нарезанный на фрагменты (раздел страницы или карточка страны).
 import { countries, docsFor } from './countries';
-import { korea } from './countryDetails/korea';
-import { turkey } from './countryDetails/turkey';
+import { countryDetails } from './countryDetails';
 import { commonApp } from './guides/commonApp';
 import { essay } from './guides/essay';
 import { recommendation } from './guides/recommendation';
@@ -61,8 +60,9 @@ const countryChunks: KbChunk[] = countries.map((c) => ({
 
 export const knowledgeBase: KbChunk[] = [
   ...countryChunks,
-  ...pageChunks('korea', 'Корея', '/country/korea', korea),
-  ...pageChunks('turkey', 'Турция', '/country/turkey', turkey),
+  ...Object.entries(countryDetails).flatMap(([id, page]) =>
+    pageChunks(id, countries.find((c) => c.id === id)?.name ?? id, `/country/${id}`, page),
+  ),
   ...pageChunks('essay', 'Гайд: мотивационное эссе', '/guides/essay', essay),
   ...pageChunks('recommendation', 'Гайд: рекомендательное письмо', '/guides/recommendation', recommendation),
   ...pageChunks('common-app', 'Гайд: Common App', '/guides/common-app', commonApp),

@@ -3,15 +3,12 @@ import { Flag } from '../components/CountryCard';
 import { ContentPageView } from '../components/content/ContentPageView';
 import { CtaBanner } from '../components/layout/Layout';
 import { countryById, docsFor, type Country as CountryT } from '../data/countries';
-import { korea } from '../data/countryDetails/korea';
-import { turkey } from '../data/countryDetails/turkey';
+import { countryDetails } from '../data/countryDetails';
 import type { ContentPage } from '../data/types';
 import { useStore } from '../store/AppStore';
 import { formatDate, nextDate } from '../store/recommend';
 import NotFound from './NotFound';
 import './pages.css';
-
-const details: Record<string, ContentPage> = { korea, turkey };
 
 const degreeLabel = { bachelor: 'Бакалавриат', master: 'Магистратура', phd: 'PhD' };
 
@@ -24,7 +21,7 @@ function templatePage(c: CountryT): ContentPage {
 
   return {
     title: `${c.name}: ${c.grant}`,
-    lead: `${c.tags}. Короткая сводка по направлению — подробный разбор в стиле «Кореи» команда AURA готовит.`,
+    lead: `${c.tags}. Короткая сводка по направлению — подробный разбор AURA готовит.`,
     sections: [
       {
         id: 'requirements', chip: 'Требования', badge: '1', kicker: 'Кого берут', title: 'Требования',
@@ -68,7 +65,7 @@ export default function Country() {
   const { id = '' } = useParams();
   const country = countryById(id);
   if (!country) return <NotFound />;
-  const page = details[id] ?? templatePage(country);
+  const page = countryDetails[id] ?? templatePage(country);
 
   return (
     <>

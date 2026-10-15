@@ -1,0 +1,34 @@
+[
+{ "id": "germany", "tags": "Бесплатные вузы • DAAD для Маг/PhD", "degrees": ["bachelor","master","phd"], "fullGrant": true, "ieltsMin": null, "gpaMin": "Верхняя треть выпуска (EPOS)",
+  "deadlines": { "early": "08-01", "late": "10-31", "note": "EPOS: свой срок у каждой программы, чаще лето–осень за год до старта; DAAD Study Scholarships — портал с 1 июня, срок по стране; uni-assist часто 15.07 (зима) / 15.01 (лето)" },
+  "links": [
+    {"label":"DAAD — база стипендий","url":"https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/"},
+    {"label":"DAAD EPOS","url":"https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/?detail=50076777"},
+    {"label":"DAAD — проверка аттестата","url":"https://www.daad.de/en/studying-in-germany/requirements/admission-database/"},
+    {"label":"anabin — признание документов","url":"https://anabin.kmk.org"},
+    {"label":"uni-assist — подача в вузы","url":"https://www.uni-assist.de/en/"} ],
+  "extraDocs": ["CV в формате Europass","Рекомендация работодателя и справки с работы (EPOS)","Блокированный счёт ~11 904 €/год (без стипендии)","Год вуза дома или Studienkolleg (для бакалавриата)"] },
+{ "id": "italy", "tags": "Бак/Маг • Грант по доходу (DSU)", "degrees": ["bachelor","master"], "fullGrant": false, "ieltsMin": null, "gpaMin": "Без порога на 1-м курсе (решает доход ISEE)",
+  "deadlines": { "early": "07-15", "late": "09-30", "note": "Отбор в вуз — ноябрь–июнь; Universitaly — до срока вуза (2026: Турин 15.07, Пиза/Венеция 30.09); DSU — июль–сентябрь (ER.GO 24.08.2026); виза — до 30.11" },
+  "links": [
+    {"label":"Universitaly — предзаявка","url":"https://www.universitaly.it/studenti-stranieri"},
+    {"label":"CIMEA — признание аттестата","url":"https://www.cimea.it"},
+    {"label":"Study in Italy (MAECI) — стипендии правительства","url":"https://studyinitaly.esteri.it"},
+    {"label":"ER.GO — пример агентства DSU","url":"https://www.er-go.it"} ],
+  "extraDocs": ["ISEE parificato — документы о доходах и имуществе семьи (легализация/апостиль + перевод)","Dichiarazione di Valore или CIMEA","Справка о сданных экзаменах 1-го курса дома или Foundation year (правило 12 лет)"] },
+{ "id": "hungary", "tags": "Бак/Маг/PhD • Полный грант", "degrees": ["bachelor","master","phd"], "fullGrant": true, "ieltsMin": null, "gpaMin": "Порог задаёт вуз; экзамен вуза ≥ 56/100",
+  "deadlines": { "early": null, "late": "01-15", "note": "Приём ~ноябрь–15 января (2026/27: 15.01.2026, 14:00 CET); номинация страной в феврале, экзамены вузов март–май, результаты конец июня" },
+  "links": [
+    {"label":"Stipendium Hungaricum","url":"https://stipendiumhungaricum.hu"},
+    {"label":"Как подать заявку","url":"https://stipendiumhungaricum.hu/apply/"},
+    {"label":"Sending partners — условия для твоей страны","url":"https://stipendiumhungaricum.hu/partners/"} ],
+  "extraDocs": ["Нотариальный перевод аттестата и табеля","Мотивационное письмо (от 1 стр., Times New Roman 12)","Медсправка по шаблону программы (только победителям)","Тебе должно быть 18 к 31 августа года старта"] },
+{ "id": "uk", "short": "Великобрит.", "tags": "Магистратура • 100% (Chevening)", "degrees": ["master"], "fullGrant": true, "ieltsMin": null, "gpaMin": "Диплом бакалавра + 2 800 ч опыта после него",
+  "deadlines": { "early": null, "late": "10-06", "note": "Chevening: приём август–начало октября (2027/28 закрылся в октябре 2026, 11:00 UTC); интервью март–апрель; безусловный оффер до 8 июля" },
+  "links": [
+    {"label":"Chevening — официальный сайт","url":"https://www.chevening.org"},
+    {"label":"Chevening — сроки цикла","url":"https://www.chevening.org/scholarships/application-timeline/"},
+    {"label":"UCAS — бакалавриат","url":"https://www.ucas.com"},
+    {"label":"GOV.UK — деньги для студенческой визы","url":"https://www.gov.uk/student-visa/money"} ],
+  "extraDocs": ["4 эссе Chevening","3 программы магистратуры и безусловный оффер от одной","Подтверждение 2 800 ч работы после бакалавриата"] }
+]

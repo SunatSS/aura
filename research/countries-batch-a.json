@@ -1,0 +1,18 @@
+[
+{"id":"china","tags":"Бак/Маг/PhD • Полный грант + стипендия","degrees":["bachelor","master","phd"],"fullGrant":true,"ieltsMin":6.0,"gpaMin":null,
+ "deadlines":{"early":"12-10","late":"04-30","note":"Тип B — у каждого вуза свой срок, примерно с октября по апрель–май (Fudan — до 10 дек, Silk Road в Tianjin — до 18 мая). Тип A через своё ведомство — обычно январь–февраль. Для бакалавриата обязателен CSCA"},
+ "links":[{"label":"Campus China — портал CSC","url":"https://www.campuschina.org"},{"label":"CSCA — официальный сайт экзамена","url":"https://csca.cn"},{"label":"Chinese Test — регистрация на HSK","url":"https://www.chinesetest.cn"}],
+ "extraDocs":["Результат CSCA (для бакалавриата)","Форма медосмотра Foreigner Physical Examination (действует 6 мес)","Справка о несудимости (не старше 6 мес)","Study Plan","Анкета CSC с campuschina.org"]},
+{"id":"japan","tags":"Бак/Маг/PhD • 117 000 ¥/мес + обучение","degrees":["bachelor","master","phd"],"fullGrant":true,"ieltsMin":null,"gpaMin":null,
+ "deadlines":{"early":null,"late":"05-25","note":"Embassy Recommendation: объявление в апреле, подача до конца мая (Узбекистан-2026 — до 25 мая), экзамены и интервью июнь–июль, вылет в апреле"},
+ "links":[{"label":"Study in Japan — стипендия MEXT","url":"https://www.studyinjapan.go.jp/en/planning/scholarships/mext-scholarships/"},{"label":"Формы и гайды MEXT для бакалавриата","url":"https://www.studyinjapan.go.jp/en/smap-stopj-applications-undergraduate.html"},{"label":"Посольство Японии в Узбекистане — MEXT","url":"https://www.uz.emb-japan.go.jp/itpr_ru/programMEXT.html"},{"label":"JLPT","url":"https://www.jlpt.jp/e/"}],
+ "extraDocs":["Анкета FY текущего года + фото 4,5×3,5 см","Табель за все годы старшей школы со шкалой оценок","Рекомендация классного руководителя или директора","Медсправка по форме MEXT","Два комплекта: оригиналы + копии"]},
+{"id":"singapore","tags":"Бак • TG с отработкой 3 года + стипендии NTU/NUS","degrees":["bachelor","phd"],"fullGrant":false,"ieltsMin":null,"gpaMin":null,
+ "deadlines":{"early":"01-20","late":"02-17","note":"NTU (прочие международные аттестаты): 15 окт – 20 янв; NUS: 16 дек – 17 фев. Заявка на стипендию подаётся вместе с заявкой на поступление"},
+ "links":[{"label":"MOE — Tuition Grant Scheme","url":"https://www.moe.gov.sg/financial-matters/tuition-grant-scheme"},{"label":"NTU — стоимость и Tuition Grant","url":"https://www.ntu.edu.sg/admissions/undergraduate/fees-and-funding/tuition-fees"},{"label":"NTU Science and Technology Undergraduate Scholarship","url":"https://www.ntu.edu.sg/admissions/undergraduate/scholarships-and-awards/scholarship-opportunities/detail/ntu-science-and-technology-undergraduate-scholarship"},{"label":"NUS — даты подачи","url":"https://www.nus.edu.sg/oam/admissions/important-dates"}],
+ "extraDocs":["SAT / ACT with Writing / AP (обязательно для NUS)","Объяснение системы оценок школы","Онлайн-отзыв учителя (для стипендии)","Два поручителя для договора TG"]},
+{"id":"malaysia","tags":"Маг/PhD • MIS: обучение + RM 1 500/мес","degrees":["master","phd"],"fullGrant":true,"ieltsMin":6.0,"gpaMin":"CGPA 3.00 (Second Class Upper)",
+ "deadlines":{"early":null,"late":"04-03","note":"Окно MIS-2026: 4 марта – 3 апреля, оферы — октябрь–декабрь. На бакалавриат госгранта нет, только частичные скидки вузов"},
+ "links":[{"label":"MOHE — Malaysia International Scholarship","url":"https://biasiswa.mohe.gov.my/INTER/index.php"},{"label":"EMGS — студенческая виза","url":"https://visa.educationmalaysia.gov.my"},{"label":"Education Malaysia","url":"https://educationmalaysia.gov.my"}],
+ "extraDocs":["Research proposal от 1 000 слов (research-маг/PhD)","Два рекомендательных письма","CV","Заверенные транскрипты + письмо о системе оценок","Admission letter (если есть)"]}
+]
