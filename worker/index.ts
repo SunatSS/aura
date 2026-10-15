@@ -1,30 +1,18 @@
 import { Hono, type Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { createMiddleware } from 'hono/factory';
 import type { Profile, User } from '../src/api/types';
 import { countryById, docsFor } from '../src/data/countries';
+import { aiRoutes } from './aiRoutes';
 import { SESSION_COOKIE, SESSION_TTL_MS, hashPassword, hashToken, randomHex, verifyPassword } from './auth';
 import * as db from './db';
-
-type AppEnv = { Bindings: Env; Variables: { user: User } };
+import { fail, readJson, requireUser, type AppEnv } from './http';
 
 const app = new Hono<AppEnv>().basePath('/api');
-
-const fail = (c: Context, status: 400 | 401 | 404 | 409, error: string) => c.json({ error }, status);
 
 const DUMMY_SALT = '00'.repeat(16);
 const DUMMY_HASH = '00'.repeat(32);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-async function readJson<T>(c: Context): Promise<Partial<T>> {
-  try {
-    const body = await c.req.json();
-    return body && typeof body === 'object' ? body : {};
-  } catch {
-    return {};
-  }
-}
 
 async function startSession(c: Context<AppEnv>, userId: string) {
   const token = randomHex(32);
@@ -85,14 +73,6 @@ app.post('/auth/logout', async (c) => {
 
 // ---------- Всё ниже — только для вошедших ----------
 
-const requireUser = createMiddleware<AppEnv>(async (c, next) => {
-  const token = getCookie(c, SESSION_COOKIE);
-  const user = token ? await db.userBySession(c.env.DB, await hashToken(token)) : null;
-  if (!user) return fail(c, 401, 'Нужно войти.');
-  c.set('user', user);
-  await next();
-});
-
 app.get('/me', requireUser, (c) => meResponse(c, c.get('user')));
 
 const ALLOWED: Record<keyof Profile, readonly string[] | null> = {
@@ -147,6 +127,8 @@ app.patch('/tracker/:countryId', requireUser, async (c) => {
   if (!item) return fail(c, 404, 'Программы нет в трекере.');
   return c.json({ item });
 });
+
+app.route('/ai', aiRoutes);
 
 app.notFound((c) => fail(c, 404, 'Нет такого метода API.'));
 

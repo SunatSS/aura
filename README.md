@@ -8,6 +8,7 @@
 - **Фронтенд:** React + Vite + TypeScript, React Router.
 - **Бэкенд:** Cloudflare Worker на [Hono](https://hono.dev) (`worker/`), отдаёт и статику, и `/api/*`.
 - **База данных:** Cloudflare D1 (SQLite), схема в `migrations/`.
+- **AI:** Workers AI (`@cf/google/gemma-4-26b-a4b-it`), резерв — Gemini API (`worker/ai.ts`).
 - Всё укладывается в бесплатный план Cloudflare Workers.
 
 ## Страницы
@@ -21,6 +22,7 @@
 | `/register`, `/login` | Регистрация и вход по email + пароль |
 | `/onboarding` | Квиз: степень, этап, финансирование, баллы |
 | `/dashboard` | Кабинет: прогресс, мои программы, чек-лист документов, дедлайны, рекомендации |
+| `/mentor` | AI-ментор: ревью эссе, упаковщик CV, FAQ-бот «Бюрократ» |
 
 ## API
 
@@ -34,8 +36,25 @@
 | POST | `/api/tracker` | `{countryId}` |
 | PATCH | `/api/tracker/:countryId` | `{done?, submitted?}` |
 | DELETE | `/api/tracker/:countryId` | |
+| GET | `/api/ai/quota` | сколько AI-запросов осталось сегодня |
+| POST | `/api/ai/essay` | `{text}` → разбор эссе (JSON) |
+| POST | `/api/ai/cv` | `{text}` → пункты CV |
+| POST | `/api/ai/faq` | `{question}` → ответ по базе AURA + источники |
 
 Пароли хешируются PBKDF2-SHA256, сессия — HttpOnly-cookie на 30 дней (в базе хранится только хеш токена).
+
+## AI и лимиты
+
+- Бесплатный Workers AI — 10 000 нейронов в день на аккаунт (~250 запросов к Gemma 4). Сервер ведёт учёт
+  в таблице `ai_daily_budget` и останавливается на `AI_DAILY_NEURON_BUDGET` (9 000).
+- Каждому пользователю — `AI_USER_DAILY_LIMIT` (15) запросов в день (`ai_user_usage`). Если модель не ответила, запрос не списывается.
+- Лимиты сбрасываются в 00:00 UTC. Настройки — в `vars` файла `wrangler.jsonc`.
+- **Gemini (необязательно):** если задан секрет `GEMINI_API_KEY`, он используется, когда бюджет Workers AI
+  исчерпан или Workers AI ответил ошибкой. Ключ создаётся в [Google AI Studio](https://aistudio.google.com/apikey)
+  и добавляется в дашборде Cloudflare: Worker `aura` → Settings → Variables and Secrets → Add → Secret.
+  На бесплатном тарифе Google может использовать запросы для улучшения моделей.
+- FAQ-бот ищет подходящие разделы в контенте сайта (`src/data/kb.ts`) и передаёт модели только их.
+- Промпты — `worker/prompts.ts`.
 
 ## Локальный запуск
 
@@ -47,7 +66,15 @@ npm run db:migrate:local   # создать таблицы в локальной
 npm run dev                # http://localhost:5173 — фронт + Worker + локальная D1
 ```
 
-Логин в Cloudflare для локальной разработки не нужен.
+Логин в Cloudflare для локальной разработки не нужен — но тогда AI-ментор отвечает «недоступен»:
+модели Workers AI работают только в облаке. Чтобы проверить AI локально:
+
+```bash
+npx wrangler login   # один раз, откроется браузер
+npm run dev:ai
+```
+
+Локальные запросы к AI тратят тот же дневной бесплатный лимит аккаунта.
 
 ## Деплой (Workers Builds)
 
@@ -73,5 +100,4 @@ npm run db:migrate:local
 
 ## Дальше
 
-- AI-функции на Workers AI (ревьюер эссе, упаковщик CV, FAQ-бот) — binding `AI` в `wrangler.jsonc`.
 - Вход через Google (OAuth).

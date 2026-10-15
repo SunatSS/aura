@@ -2,8 +2,17 @@
   "extends": "./tsconfig.node.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
-    "lib": ["ES2023"],
-    "types": ["./worker-configuration.d.ts"]
+    "lib": [
+      "ES2023"
+    ],
+    "types": [
+      "./worker-configuration.d.ts"
+    ]
   },
-  "include": ["worker", "src/api/types.ts", "src/data/countries.ts", "worker-configuration.d.ts"]
+  "include": [
+    "worker",
+    "src/api/types.ts",
+    "src/data",
+    "worker-configuration.d.ts"
+  ]
 }

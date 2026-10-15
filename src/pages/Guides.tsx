@@ -41,7 +41,15 @@ export function GuidePage() {
   if (!guide?.page) return <NotFound />;
   return (
     <>
-      <ContentPageView page={guide.page} eyebrow={<Link to="/guides" className="back-link">← Все гайды</Link>} />
+      <ContentPageView
+        page={guide.page}
+        eyebrow={<Link to="/guides" className="back-link">← Все гайды</Link>}
+        aside={
+          slug === 'essay' && (
+            <Link to="/mentor?tab=essay" className="btn btn--lime">Проверить своё эссе AI-ревьюером →</Link>
+          )
+        }
+      />
       <CtaBanner />
     </>
   );

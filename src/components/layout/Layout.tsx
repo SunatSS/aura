@@ -40,6 +40,7 @@ function Header() {
           <NavLink to="/catalog" className="chip">Каталог программ</NavLink>
           <NavLink to="/guides" className="chip">Гайды</NavLink>
           <NavLink to="/dashboard" className="chip">Трекер</NavLink>
+          <NavLink to="/mentor" className="chip">AI-ментор</NavLink>
         </nav>
         <div className="header__actions">
           {loading ? null : user ? (

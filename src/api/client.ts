@@ -1,4 +1,4 @@
-import type { MeResponse, Profile, TrackerItem } from './types';
+import type { AiMeta, AiQuota, CvPack, EssayReview, FaqAnswer, MeResponse, Profile, TrackerItem } from './types';
 
 export class ApiError extends Error {
   status: number;
@@ -35,4 +35,9 @@ export const api = {
   removeTracked: (countryId: string) => request<{ ok: true }>('DELETE', `/tracker/${encodeURIComponent(countryId)}`),
   updateTracked: (countryId: string, patch: { done?: string[]; submitted?: boolean }) =>
     request<{ item: TrackerItem }>('PATCH', `/tracker/${encodeURIComponent(countryId)}`, patch),
+
+  aiQuota: () => request<AiQuota>('GET', '/ai/quota'),
+  reviewEssay: (text: string) => request<{ result: EssayReview; meta: AiMeta }>('POST', '/ai/essay', { text }),
+  packCv: (text: string) => request<{ result: CvPack; meta: AiMeta }>('POST', '/ai/cv', { text }),
+  askFaq: (question: string) => request<{ result: FaqAnswer; meta: AiMeta | { provider: null; quota: AiQuota } }>('POST', '/ai/faq', { question }),
 };

@@ -8,6 +8,7 @@ import Country from './pages/Country';
 import Dashboard from './pages/Dashboard';
 import { GuidePage, GuidesIndex } from './pages/Guides';
 import Landing from './pages/Landing';
+import Mentor from './pages/Mentor';
 import NotFound from './pages/NotFound';
 import Onboarding from './pages/Onboarding';
 
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="register" element={<Register />} />
             <Route path="onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
             <Route path="dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="mentor" element={<RequireAuth><Mentor /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
