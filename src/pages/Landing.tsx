@@ -121,7 +121,7 @@ export default function Landing() {
         <p className="eyebrow">{L.guidesEyebrow}</p>
         <h2 className="landing-h2">{L.guidesTitle}</h2>
         <div className="guide-links">
-          {getGuides(locale).filter((g) => g.page).map((g) => (
+          {getGuides(locale).filter((g) => g.available).map((g) => (
             <Link key={g.slug} to={path(`/guides/${g.slug}`)} className="guide-link card">
               <span>{g.title}</span>
               <span aria-hidden="true">›</span>

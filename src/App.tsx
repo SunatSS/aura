@@ -1,17 +1,22 @@
-import { type ReactNode } from 'react';
+import { lazy, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { I18nProvider, useI18n } from './i18n/I18n';
 import { AppStoreProvider, useStore } from './store/AppStore';
-import { Login, Register } from './pages/Auth';
-import Catalog from './pages/Catalog';
-import Country from './pages/Country';
-import Dashboard from './pages/Dashboard';
-import { GuidePage, GuidesIndex } from './pages/Guides';
 import Landing from './pages/Landing';
-import Mentor from './pages/Mentor';
 import NotFound from './pages/NotFound';
-import Onboarding from './pages/Onboarding';
+
+// Главная — в основном файле (её открывают первой), остальные страницы
+// скачиваются при первом переходе на них
+const Catalog = lazy(() => import('./pages/Catalog'));
+const Country = lazy(() => import('./pages/Country'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Mentor = lazy(() => import('./pages/Mentor'));
+const GuidesIndex = lazy(() => import('./pages/Guides').then((m) => ({ default: m.GuidesIndex })));
+const GuidePage = lazy(() => import('./pages/Guides').then((m) => ({ default: m.GuidePage })));
+const Login = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Login })));
+const Register = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Register })));
 import { RouteEffects } from './seo/RouteEffects';
 
 function RequireAuth({ children }: { children: ReactNode }) {

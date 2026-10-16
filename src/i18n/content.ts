@@ -1,22 +1,20 @@
-// Контент на нужном языке. Русский — исходник (src/data/*), переводы — src/data/i18n/<lang>/*.
-// Если перевода нет, берётся русская версия.
+// Лёгкий контент на нужном языке: карточки стран, документы, список гайдов.
+// Длинные тексты страниц стран и гайдов здесь НЕ импортируются — на клиенте они
+// грузятся по требованию (lazyPages.ts), на сервере берутся из pages.ts.
+// Русский — исходник (src/data/*), переводы — src/data/i18n/<lang>/*; без перевода — русская версия.
 import { BASE_DOC_IDS, countries as ruCountries, countryById as ruCountryById, docsFor, type Country } from '../data/countries';
-import { countryDetails as ruDetails } from '../data/countryDetails';
 import { guides as ruGuides, type GuideMeta } from '../data/guides';
 import type { CountryText } from '../data/i18n/types';
-import type { ContentPage } from '../data/types';
 import * as enCountries from '../data/i18n/en/countries';
 import * as tjCountries from '../data/i18n/tj/countries';
-import { enDetails, enGuides } from '../data/i18n/en';
-import { tjDetails, tjGuides } from '../data/i18n/tj';
 import type { Locale } from './locales';
 import { dictionaries } from './ui';
 
-type Pack = { text: Record<string, CountryText>; baseDocs: string[]; details: Record<string, ContentPage>; guides: Record<string, ContentPage> };
+type Pack = { text: Record<string, CountryText>; baseDocs: string[] };
 
 const packs: Record<Exclude<Locale, 'ru'>, Pack> = {
-  en: { text: enCountries.countryText, baseDocs: enCountries.baseDocs, details: enDetails, guides: enGuides },
-  tj: { text: tjCountries.countryText, baseDocs: tjCountries.baseDocs, details: tjDetails, guides: tjGuides },
+  en: { text: enCountries.countryText, baseDocs: enCountries.baseDocs },
+  tj: { text: tjCountries.countryText, baseDocs: tjCountries.baseDocs },
 };
 
 function localizeCountry(c: Country, locale: Locale): Country {
@@ -48,18 +46,12 @@ export const getCountry = (locale: Locale, id: string) => {
   return c ? localizeCountry(c, locale) : undefined;
 };
 
-export function getCountryPage(locale: Locale, id: string): ContentPage | undefined {
-  if (locale !== 'ru' && packs[locale].details[id]) return packs[locale].details[id];
-  return ruDetails[id];
-}
-
 export function getGuides(locale: Locale): GuideMeta[] {
   const meta = dictionaries[locale].guides.meta;
   return ruGuides.map((g) => ({
     ...g,
     title: meta[g.slug]?.title ?? g.title,
     summary: meta[g.slug]?.summary ?? g.summary,
-    page: g.page && locale !== 'ru' ? (packs[locale].guides[g.slug] ?? g.page) : g.page,
   }));
 }
 

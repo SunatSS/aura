@@ -4,8 +4,9 @@ import { ContentPageView } from '../components/content/ContentPageView';
 import { CtaBanner } from '../components/layout/Layout';
 import type { Country as CountryT } from '../data/countries';
 import type { ContentPage } from '../data/types';
-import { docItems, getCountry, getCountryPage } from '../i18n/content';
+import { docItems, getCountry } from '../i18n/content';
 import { useI18n } from '../i18n/I18n';
+import { useCountryPage } from '../i18n/lazyPages';
 import { formatDateIn, type Locale } from '../i18n/locales';
 import type { Dict } from '../i18n/ui';
 import { useStore } from '../store/AppStore';
@@ -67,8 +68,10 @@ export default function Country() {
   const { id = '' } = useParams();
   const { locale, t, path } = useI18n();
   const country = getCountry(locale, id);
+  const loaded = useCountryPage(locale, id);
   if (!country) return <NotFound />;
-  const page = getCountryPage(locale, id) ?? templatePage(country, t, locale);
+  if (loaded === undefined) return <div className="container page muted" role="status">{t.common.loading}</div>;
+  const page = loaded ?? templatePage(country, t, locale);
 
   return (
     <>

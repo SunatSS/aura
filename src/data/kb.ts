@@ -1,6 +1,7 @@
 // База знаний для FAQ-бота: тот же контент, что показывает сайт,
 // нарезанный на фрагменты (раздел страницы или карточка страны).
-import { docItems, getCountries, getCountryPage, getGuides } from '../i18n/content';
+import { docItems, getCountries, getGuides } from '../i18n/content';
+import { getCountryPage, getGuidePage } from '../i18n/pages';
 import { LOCALES, type Locale } from '../i18n/locales';
 import { dictionaries } from '../i18n/ui';
 import type { Block, ContentPage } from './types';
@@ -72,7 +73,10 @@ function buildKnowledgeBase(locale: Locale): KbChunk[] {
       const page = getCountryPage(locale, c.id);
       return page ? pageChunks(c.id, c.name, `/country/${c.id}`, page) : [];
     }),
-    ...getGuides(locale).flatMap((g) => (g.page ? pageChunks(g.slug, `${L.guide}: ${g.title}`, `/guides/${g.slug}`, g.page) : [])),
+    ...getGuides(locale).flatMap((g) => {
+      const page = getGuidePage(locale, g.slug);
+      return page ? pageChunks(g.slug, `${L.guide}: ${g.title}`, `/guides/${g.slug}`, page) : [];
+    }),
   ];
 }
 

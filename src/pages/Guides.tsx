@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ContentPageView } from '../components/content/ContentPageView';
 import { CtaBanner } from '../components/layout/Layout';
 import { getGuide, getGuides } from '../i18n/content';
+import { useGuidePage } from '../i18n/lazyPages';
 import { useI18n } from '../i18n/I18n';
 import NotFound from './NotFound';
 import './pages.css';
@@ -17,7 +18,7 @@ export function GuidesIndex() {
         <p className="landing-sub">{T.sub}</p>
         <div className="guides-grid">
           {getGuides(locale).map((g) =>
-            g.page ? (
+            g.available ? (
               <Link key={g.slug} to={path(`/guides/${g.slug}`)} className="guide-card card">
                 <h3>{g.title}</h3>
                 <p>{g.summary}</p>
@@ -42,11 +43,13 @@ export function GuidePage() {
   const { slug = '' } = useParams();
   const { locale, t, path } = useI18n();
   const guide = getGuide(locale, slug);
-  if (!guide?.page) return <NotFound />;
+  const page = useGuidePage(locale, slug);
+  if (!guide?.available || page === null) return <NotFound />;
+  if (page === undefined) return <div className="container page muted" role="status">{t.common.loading}</div>;
   return (
     <>
       <ContentPageView
-        page={guide.page}
+        page={page}
         eyebrow={<Link to={path('/guides')} className="back-link">{t.guides.back}</Link>}
         aside={
           slug === 'essay' && (

@@ -84,13 +84,13 @@ export function metaFor(pathname: string, site = ''): PageMeta {
   const guide = bare.match(/^\/guides\/([a-z-]+)$/);
   if (guide) {
     const g = getGuide(locale, guide[1]);
-    if (g?.page) {
+    if (g?.available) {
       return {
         ...base,
         title: `${g.title.replace(/\?$/, '')} — ${SITE_NAME}`,
-        description: `${g.summary} ${g.page.lead}`.slice(0, 200),
+        description: `${g.summary} ${t.guidesDescription}`.slice(0, 200),
         jsonLd: [
-          { '@context': 'https://schema.org', '@type': 'Article', headline: g.page.title, description: g.summary, inLanguage: locale === 'tj' ? 'tg' : locale, mainEntityOfPage: site + L(bare), publisher: { '@type': 'Organization', name: SITE_NAME } },
+          { '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.summary, inLanguage: locale === 'tj' ? 'tg' : locale, mainEntityOfPage: site + L(bare), publisher: { '@type': 'Organization', name: SITE_NAME } },
           crumbs(site, [[t.breadcrumbHome, L('/')], [t.breadcrumbGuides, L('/guides')], [g.title, L(bare)]]),
         ],
       };
@@ -106,7 +106,7 @@ export function metaFor(pathname: string, site = ''): PageMeta {
 
 // Публичные страницы без языкового префикса
 export function publicBarePaths(): string[] {
-  return ['/', '/catalog', '/guides', ...getCountries('ru').map((c) => `/country/${c.id}`), ...getGuides('ru').filter((g) => g.page).map((g) => `/guides/${g.slug}`)];
+  return ['/', '/catalog', '/guides', ...getCountries('ru').map((c) => `/country/${c.id}`), ...getGuides('ru').filter((g) => g.available).map((g) => `/guides/${g.slug}`)];
 }
 
 // Альтернативные языковые версии страницы (для <link rel="alternate" hreflang> и sitemap)

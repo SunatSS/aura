@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useI18n } from '../../i18n/I18n';
 import { LOCALE_META, LOCALES } from '../../i18n/locales';
@@ -164,7 +164,9 @@ export function Layout() {
       <Header />
       <ErrorBanner />
       <main id="main" tabIndex={-1}>
-        <Outlet />
+        <Suspense fallback={<div className="container page muted" role="status">{t.common.loading}</div>}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </>
