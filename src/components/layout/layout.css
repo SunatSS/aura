@@ -144,31 +144,104 @@
 .footer {
   background: var(--ink);
   color: var(--white);
-  padding: 32px 0;
+  padding: 48px 0 24px;
 }
 
-.footer__row {
+.footer__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr 1.7fr 1fr;
+  gap: 32px;
+}
+
+.footer__brand {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .footer__text {
   color: #bdbdbd;
   font-size: 14px;
-  flex: 1 1 280px;
+  max-width: 320px;
 }
 
-.footer__nav {
+.footer__col {
   display: flex;
-  gap: 18px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
 }
 
-.footer__nav a {
+.footer__title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9a9a9a;
+  margin-bottom: 4px;
+}
+
+.footer__col a {
   color: var(--lime);
   text-decoration: none;
   font-weight: 600;
+  font-size: 15px;
+}
+
+.footer__col a:hover {
+  text-decoration: underline;
+}
+
+.footer__email {
+  overflow-wrap: normal;
+}
+
+.footer__icons {
+  display: flex;
+  gap: 10px;
+}
+
+.footer__col .footer__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px; /* удобная цель для пальца */
+  height: 44px;
+  border: 2px solid var(--lime);
+  border-radius: 12px;
+  color: var(--lime);
+  box-shadow: 3px 3px 0 var(--lime);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+}
+
+.footer__col .footer__icon:hover {
+  text-decoration: none;
+  background: var(--lime);
+  color: var(--ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--lime);
+}
+
+.footer__icon--wide {
+  padding: 0 14px;
+}
+
+.footer__bottom {
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px solid #333;
+  font-size: 13px;
+  color: #9a9a9a;
+}
+
+@media (max-width: 860px) {
+  .footer__grid { grid-template-columns: 1fr 1fr; }
+  .footer__brand { grid-column: span 2; }
+}
+
+@media (max-width: 480px) {
+  .footer__grid { grid-template-columns: 1fr; }
+  .footer__brand { grid-column: auto; }
 }
 
 /* ---------- Ошибка синхронизации ---------- */

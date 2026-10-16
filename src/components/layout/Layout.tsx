@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useI18n } from '../../i18n/I18n';
 import { LOCALE_META, LOCALES } from '../../i18n/locales';
 import { useStore } from '../../store/AppStore';
+import { CONTACT_EMAIL, ICONS, SOCIALS, TELEGRAM_URL } from './Social';
 import './layout.css';
 
 export function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
@@ -131,16 +132,49 @@ export function CtaBanner() {
 
 function Footer() {
   const { t, path } = useI18n();
+  const F = t.footer;
   return (
     <footer className="footer">
-      <div className="container footer__row">
-        <Logo />
-        <p className="footer__text">{t.footer.text}</p>
-        <nav className="footer__nav" aria-label={t.footer.nav}>
-          <Link to={path('/catalog')}>{t.footer.catalog}</Link>
-          <Link to={path('/guides')}>{t.footer.guides}</Link>
-          <Link to={path('/dashboard')}>{t.footer.tracker}</Link>
+      <div className="container footer__grid">
+        <div className="footer__brand">
+          <Logo />
+          <p className="footer__text">{F.text}</p>
+        </div>
+
+        <nav className="footer__col" aria-label={F.nav}>
+          <h2 className="footer__title">{F.navTitle}</h2>
+          <Link to={path('/catalog')}>{F.catalog}</Link>
+          <Link to={path('/guides')}>{F.guides}</Link>
+          <Link to={path('/dashboard')}>{F.tracker}</Link>
+          <Link to={path('/mentor')}>{t.header.mentor}</Link>
         </nav>
+
+        <div className="footer__col">
+          <h2 className="footer__title">{F.contactsTitle}</h2>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="footer__email">
+            {/* перенос строки допускаем только после «@» */}
+            {CONTACT_EMAIL.split('@')[0]}@<wbr />{CONTACT_EMAIL.split('@')[1]}
+          </a>
+          {/* ник в Telegram не показываем текстом — только иконка с подписью для скринридеров */}
+          <a href={TELEGRAM_URL} className="footer__icon footer__icon--wide" target="_blank" rel="noopener noreferrer" aria-label={F.telegram} title={F.telegram}>
+            {ICONS.telegram}
+            <span aria-hidden="true">Telegram</span>
+          </a>
+        </div>
+
+        <div className="footer__col">
+          <h2 className="footer__title">{F.socialTitle}</h2>
+          <div className="footer__icons">
+            {SOCIALS.map((s) => (
+              <a key={s.id} href={s.url} className="footer__icon" target="_blank" rel="noopener noreferrer" aria-label={F.social(s.name)} title={s.name}>
+                {ICONS[s.id]}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="container footer__bottom">
+        <p>{F.rights(new Date().getFullYear())}</p>
       </div>
     </footer>
   );
