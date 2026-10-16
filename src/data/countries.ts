@@ -273,6 +273,20 @@ export const baseDocs = [
 
 export const docsFor = (c: Country) => [...baseDocs, ...(c.extraDocs ?? [])];
 
+// Стабильные id документов чек-листа: в базе хранятся они, а не подписи,
+// чтобы отметки не терялись при смене языка или правке текста.
+export const BASE_DOC_IDS = ['passport', 'diploma', 'apostille', 'translation', 'english', 'motivation', 'recs', 'cv'] as const;
+
+export const docIdsFor = (c: Country) => [...BASE_DOC_IDS, ...(c.extraDocs ?? []).map((_, i) => `x${i}`)];
+
+// Старые записи трекера хранили русские подписи — переводим их в id
+export function normalizeDocId(c: Country, value: string): string | null {
+  const ids = docIdsFor(c);
+  if (ids.includes(value)) return value;
+  const i = docsFor(c).indexOf(value);
+  return i >= 0 ? ids[i] : null;
+}
+
 // Северный Кипр не входит в набор circle-flags — показываем флаг Кипра
 export const flagUrl = (code: string) =>
   `https://cdn.jsdelivr.net/gh/HatScripts/circle-flags@2.7.0/flags/${code === 'cy-nc' ? 'cy' : code}.svg`;

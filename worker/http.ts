@@ -5,6 +5,7 @@ import { createMiddleware } from 'hono/factory';
 import type { User } from '../src/api/types';
 import { SESSION_COOKIE, SESSION_TTL_MS, hashToken, randomHex } from './auth';
 import { createSession, userBySession } from './db';
+import { msg } from './messages';
 
 export type AppEnv = { Bindings: Env; Variables: { user: User } };
 
@@ -22,7 +23,7 @@ export async function readJson<T>(c: Context): Promise<Partial<T>> {
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
   const token = getCookie(c, SESSION_COOKIE);
   const user = token ? await userBySession(c.env.DB, await hashToken(token)) : null;
-  if (!user) return fail(c, 401, 'Нужно войти.');
+  if (!user) return fail(c, 401, msg(c).needLogin);
   c.set('user', user);
   await next();
 });

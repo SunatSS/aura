@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { LOCALE_META } from '../i18n/locales';
 import { metaFor } from './meta';
 
 // При переходах внутри SPA:
@@ -13,6 +14,7 @@ export function RouteEffects() {
   useEffect(() => {
     const meta = metaFor(pathname, window.location.origin);
     document.title = meta.title;
+    document.documentElement.lang = LOCALE_META[meta.locale].htmlLang;
     document.querySelector('meta[name="description"]')?.setAttribute('content', meta.description);
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (meta.noindex) canonical?.remove();

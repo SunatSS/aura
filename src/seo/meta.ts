@@ -1,17 +1,18 @@
 // SEO-метаданные страниц. Общий модуль: Worker подставляет их в HTML при первой
 // загрузке (это видят поисковики и превью ссылок в мессенджерах), а React обновляет
 // title/description при переходах внутри сайта.
-import { countries, countryById } from '../data/countries';
-import { guideBySlug, guides } from '../data/guides';
+import { getCountries, getCountry, getGuide, getGuides } from '../i18n/content';
+import { LOCALES, localizePath, splitLocale, type Locale } from '../i18n/locales';
+import { dictionaries } from '../i18n/ui';
 
 export const SITE_NAME = 'AURA';
-const DEFAULT_DESCRIPTION =
-  'AURA — бесплатная база программ и трекер заявок для поступления за рубеж на гранты: CSC, DAAD, GKS, Türkiye Burslari, Chevening и другие. Дедлайны, документы и прямые ссылки на первоисточники. Ноль посредников.';
 
 export type PageMeta = {
   title: string;
   description: string;
-  path: string; // канонический путь
+  locale: Locale;
+  path: string; // канонический путь на текущем языке
+  barePath: string; // путь без языкового префикса — для hreflang
   noindex?: boolean;
   status?: 200 | 404;
   jsonLd?: Record<string, unknown>[];
@@ -23,115 +24,90 @@ const crumbs = (site: string, items: [string, string][]) => ({
   itemListElement: items.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: site + path })),
 });
 
-const PRIVATE: Record<string, string> = {
-  '/login': 'Вход',
-  '/register': 'Регистрация',
-  '/onboarding': 'Анкета',
-  '/dashboard': 'Личный кабинет',
-  '/mentor': 'AI-ментор',
-};
-
 export function metaFor(pathname: string, site = ''): PageMeta {
-  const path = pathname.replace(/\/+$/, '') || '/';
+  const { locale, path: raw } = splitLocale(pathname);
+  const bare = raw.replace(/\/+$/, '') || '/';
+  const t = dictionaries[locale].meta;
+  const L = (p: string) => localizePath(p, locale);
+  const base = { locale, barePath: bare, path: L(bare) };
 
-  if (path === '/') {
+  if (bare === '/') {
     return {
-      title: 'AURA — гранты на учёбу за рубежом без посредников',
-      description: DEFAULT_DESCRIPTION,
-      path,
+      ...base,
+      title: t.homeTitle,
+      description: t.siteDescription,
       jsonLd: [
-        { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: site + '/', inLanguage: 'ru' },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: SITE_NAME,
-          url: site + '/',
-          logo: site + '/favicon.svg',
-          description: 'Бесплатная платформа для самостоятельного поступления за рубеж на гранты.',
-        },
+        { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: site + L('/'), inLanguage: locale === 'tj' ? 'tg' : locale },
+        { '@context': 'https://schema.org', '@type': 'Organization', name: SITE_NAME, url: site + '/', logo: site + '/favicon.svg', description: t.orgDescription },
       ],
     };
   }
 
-  if (path === '/catalog') {
+  if (bare === '/catalog') {
+    const countries = getCountries(locale);
     return {
-      title: `Каталог стран и грантов на учёбу за рубежом — ${SITE_NAME}`,
-      description: `${countries.length} направлений для бесплатной учёбы: ${countries.slice(0, 8).map((c) => `${c.name} (${c.grant})`).join(', ')} и другие. Требования, дедлайны и документы.`,
-      path,
+      ...base,
+      title: `${t.catalogTitle} — ${SITE_NAME}`,
+      description: t.catalogDescription(countries.length, countries.slice(0, 8).map((c) => `${c.name} (${c.grant})`).join(', ')),
       jsonLd: [
         {
           '@context': 'https://schema.org',
           '@type': 'ItemList',
-          itemListElement: countries.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: `${c.name}: ${c.grant}`, url: `${site}/country/${c.id}` })),
+          itemListElement: countries.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: `${c.name}: ${c.grant}`, url: site + L(`/country/${c.id}`) })),
         },
       ],
     };
   }
 
-  const country = path.match(/^\/country\/([a-z-]+)$/);
+  const country = bare.match(/^\/country\/([a-z-]+)$/);
   if (country) {
-    const c = countryById(country[1]);
+    const c = getCountry(locale, country[1]);
     if (c) {
-      const reqs = [c.ieltsMin && `IELTS от ${c.ieltsMin}`, c.gpaMin && `GPA ${c.gpaMin}`].filter(Boolean).join(', ');
+      const reqs = [c.ieltsMin && `IELTS ${c.ieltsMin}+`, c.gpaMin && `GPA ${c.gpaMin}`].filter(Boolean).join(', ');
+      const title = t.countryTitle(c.name, c.grant);
       return {
-        title: `${c.name}: ${c.grant} — как поступить на грант | ${SITE_NAME}`,
-        description: `Учёба в стране «${c.name}» на грант ${c.grant}: ${c.tags}.${reqs ? ` Требования: ${reqs}.` : ''} Этапы, документы, дедлайны и официальные ссылки.`,
-        path,
+        ...base,
+        title: `${title} | ${SITE_NAME}`,
+        description: t.countryDescription(c.name, c.grant, c.tags, reqs).slice(0, 300),
         jsonLd: [
-          {
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: `${c.name}: ${c.grant} — как поступить на грант`,
-            inLanguage: 'ru',
-            mainEntityOfPage: site + path,
-            publisher: { '@type': 'Organization', name: SITE_NAME },
-          },
-          crumbs(site, [['Главная', '/'], ['Каталог', '/catalog'], [c.name, path]]),
+          { '@context': 'https://schema.org', '@type': 'Article', headline: title, inLanguage: locale === 'tj' ? 'tg' : locale, mainEntityOfPage: site + L(bare), publisher: { '@type': 'Organization', name: SITE_NAME } },
+          crumbs(site, [[t.breadcrumbHome, L('/')], [t.breadcrumbCatalog, L('/catalog')], [c.name, L(bare)]]),
         ],
       };
     }
   }
 
-  if (path === '/guides') {
-    return {
-      title: `Гайды поступающего: эссе, рекомендации, Common App — ${SITE_NAME}`,
-      description: 'Пошаговые гайды без воды: как написать мотивационное эссе, попросить рекомендательное письмо и заполнить Common App.',
-      path,
-    };
+  if (bare === '/guides') {
+    return { ...base, title: `${t.guidesTitle} — ${SITE_NAME}`, description: t.guidesDescription };
   }
 
-  const guide = path.match(/^\/guides\/([a-z-]+)$/);
+  const guide = bare.match(/^\/guides\/([a-z-]+)$/);
   if (guide) {
-    const g = guideBySlug(guide[1]);
+    const g = getGuide(locale, guide[1]);
     if (g?.page) {
       return {
+        ...base,
         title: `${g.title.replace(/\?$/, '')} — ${SITE_NAME}`,
         description: `${g.summary} ${g.page.lead}`.slice(0, 200),
-        path,
         jsonLd: [
-          {
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: g.page.title,
-            description: g.summary,
-            inLanguage: 'ru',
-            mainEntityOfPage: site + path,
-            publisher: { '@type': 'Organization', name: SITE_NAME },
-          },
-          crumbs(site, [['Главная', '/'], ['Гайды', '/guides'], [g.title, path]]),
+          { '@context': 'https://schema.org', '@type': 'Article', headline: g.page.title, description: g.summary, inLanguage: locale === 'tj' ? 'tg' : locale, mainEntityOfPage: site + L(bare), publisher: { '@type': 'Organization', name: SITE_NAME } },
+          crumbs(site, [[t.breadcrumbHome, L('/')], [t.breadcrumbGuides, L('/guides')], [g.title, L(bare)]]),
         ],
       };
     }
   }
 
-  if (PRIVATE[path]) {
-    return { title: `${PRIVATE[path]} — ${SITE_NAME}`, description: DEFAULT_DESCRIPTION, path, noindex: true };
+  if (t.private[bare]) {
+    return { ...base, title: `${t.private[bare]} — ${SITE_NAME}`, description: t.siteDescription, noindex: true };
   }
 
-  return { title: `Страница не найдена — ${SITE_NAME}`, description: DEFAULT_DESCRIPTION, path, noindex: true, status: 404 };
+  return { ...base, title: `${t.notFoundTitle} — ${SITE_NAME}`, description: t.siteDescription, noindex: true, status: 404 };
 }
 
-// Страницы для sitemap.xml
-export function publicPaths(): string[] {
-  return ['/', '/catalog', '/guides', ...countries.map((c) => `/country/${c.id}`), ...guides.filter((g) => g.page).map((g) => `/guides/${g.slug}`)];
+// Публичные страницы без языкового префикса
+export function publicBarePaths(): string[] {
+  return ['/', '/catalog', '/guides', ...getCountries('ru').map((c) => `/country/${c.id}`), ...getGuides('ru').filter((g) => g.page).map((g) => `/guides/${g.slug}`)];
 }
+
+// Альтернативные языковые версии страницы (для <link rel="alternate" hreflang> и sitemap)
+export const alternates = (barePath: string) => LOCALES.map((l) => ({ locale: l, path: localizePath(barePath, l) }));

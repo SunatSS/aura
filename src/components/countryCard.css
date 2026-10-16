@@ -15,11 +15,30 @@
 }
 
 .country-card {
+  position: relative; /* для растянутой ссылки: вся карточка кликабельна */
   padding: 20px 20px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.country-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.country-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+/* Рамка фокуса на всей карточке, когда с клавиатуры выбрана её ссылка */
+.country-card:has(.country-card__more:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
 }
 
 .country-card__top {
@@ -29,6 +48,8 @@
 }
 
 .country-card__star {
+  position: relative;
+  z-index: 1; /* звёздочка остаётся отдельной кнопкой поверх растянутой ссылки */
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -87,8 +108,19 @@
   background: var(--white);
 }
 
-.country-card__more:hover {
+.country-card__more::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+}
+
+.country-card:hover .country-card__more {
   background: var(--lime);
+}
+
+.country-card__more:focus-visible {
+  outline: none;
 }
 
 .country-card__more span {

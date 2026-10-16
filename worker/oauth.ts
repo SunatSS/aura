@@ -7,6 +7,7 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { pkceChallenge, pkceVerifier, randomHex } from './auth';
 import * as db from './db';
 import { startSession, type AppEnv } from './http';
+import { DEFAULT_LOCALE, isLocale, localizePath, type Locale } from '../src/i18n/locales';
 
 const STATE_COOKIE = 'aura_oauth';
 const COOKIE_PATH = '/api/auth/google';
@@ -19,7 +20,8 @@ const redirectUri = (c: Context<AppEnv>) => `${new URL(c.req.url).origin}/api/au
 // Разрешаем возвращать только на свои страницы: «/dashboard», но не «//evil.com»
 const safeNext = (next: string | undefined) => (next && /^\/(?!\/)[\w\-/?=&#%.]*$/.test(next) ? next : '');
 
-const backToLogin = (c: Context<AppEnv>, error: string) => c.redirect(`/login?error=${error}`, 302);
+const backToLogin = (c: Context<AppEnv>, error: string, locale: Locale = DEFAULT_LOCALE) =>
+  c.redirect(`${localizePath('/login', locale)}?error=${error}`, 302);
 
 type IdToken = { iss: string; aud: string; sub: string; exp: number; email?: string; email_verified?: boolean; name?: string; given_name?: string };
 
@@ -38,12 +40,14 @@ function decodeIdToken(token: string): IdToken | null {
 export const googleRoutes = new Hono<AppEnv>();
 
 googleRoutes.get('/start', async (c) => {
-  if (!googleConfigured(c.env)) return backToLogin(c, 'google_unavailable');
+  const lang = c.req.query('lang');
+  const locale: Locale = isLocale(lang) ? lang : DEFAULT_LOCALE;
+  if (!googleConfigured(c.env)) return backToLogin(c, 'google_unavailable', locale);
 
   const state = randomHex(16);
   const verifier = pkceVerifier();
   const next = safeNext(c.req.query('next'));
-  setCookie(c, STATE_COOKIE, JSON.stringify({ state, verifier, next }), {
+  setCookie(c, STATE_COOKIE, JSON.stringify({ state, verifier, next, locale }), {
     httpOnly: true,
     secure: true,
     sameSite: 'Lax', // cookie должна прийти обратно при редиректе из Google
@@ -67,17 +71,18 @@ googleRoutes.get('/start', async (c) => {
 googleRoutes.get('/callback', async (c) => {
   const raw = getCookie(c, STATE_COOKIE);
   deleteCookie(c, STATE_COOKIE, { path: COOKIE_PATH, secure: true });
-  if (!googleConfigured(c.env)) return backToLogin(c, 'google_unavailable');
-  if (c.req.query('error')) return backToLogin(c, 'google_cancelled'); // пользователь нажал «Отмена»
 
-  let saved: { state: string; verifier: string; next: string };
+  let saved: { state: string; verifier: string; next: string; locale?: string };
   try {
     saved = JSON.parse(raw ?? '');
   } catch {
     return backToLogin(c, 'google_state');
   }
+  const locale: Locale = isLocale(saved.locale) ? saved.locale : DEFAULT_LOCALE;
+  if (!googleConfigured(c.env)) return backToLogin(c, 'google_unavailable', locale);
+  if (c.req.query('error')) return backToLogin(c, 'google_cancelled', locale); // пользователь нажал «Отмена»
   const code = c.req.query('code');
-  if (!code || !saved.state || c.req.query('state') !== saved.state) return backToLogin(c, 'google_state');
+  if (!code || !saved.state || c.req.query('state') !== saved.state) return backToLogin(c, 'google_state', locale);
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -93,7 +98,7 @@ googleRoutes.get('/callback', async (c) => {
   });
   if (!tokenRes.ok) {
     console.error('Google token exchange failed', tokenRes.status, await tokenRes.text());
-    return backToLogin(c, 'google_failed');
+    return backToLogin(c, 'google_failed', locale);
   }
   const { id_token } = (await tokenRes.json()) as { id_token?: string };
   const claims = id_token ? decodeIdToken(id_token) : null;
@@ -105,7 +110,7 @@ googleRoutes.get('/callback', async (c) => {
     !claims.email ||
     claims.email_verified !== true
   ) {
-    return backToLogin(c, 'google_failed');
+    return backToLogin(c, 'google_failed', locale);
   }
 
   const email = claims.email.toLowerCase();
@@ -126,5 +131,5 @@ googleRoutes.get('/callback', async (c) => {
 
   await startSession(c, user.id);
   const hasProfile = !isNew && (await db.getProfile(c.env.DB, user.id)) !== null;
-  return c.redirect(saved.next || (hasProfile ? '/dashboard' : '/onboarding'), 302);
+  return c.redirect(saved.next || localizePath(hasProfile ? '/dashboard' : '/onboarding', locale), 302);
 });

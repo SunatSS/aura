@@ -1,5 +1,6 @@
 import { Fragment, useId, useState, type ReactNode } from 'react';
 import type { Block, ContentPage, Section } from '../../data/types';
+import { useI18n } from '../../i18n/I18n';
 import './content.css';
 
 // **жирный** и *курсив* внутри строк контента
@@ -38,6 +39,11 @@ function Accordion({ items }: { items: Extract<Block, { type: 'accordion' }>['it
       ))}
     </div>
   );
+}
+
+function NewTab() {
+  const { t } = useI18n();
+  return <span className="visually-hidden">{t.common.newTab}</span>;
 }
 
 export function BlockView({ block }: { block: Block }): ReactNode {
@@ -133,7 +139,7 @@ export function BlockView({ block }: { block: Block }): ReactNode {
             <li key={l.url}>
               <a href={l.url} target="_blank" rel="noreferrer">
                 {l.label} <span aria-hidden="true">↗</span>
-                <span className="visually-hidden"> (откроется в новой вкладке)</span>
+                <NewTab />
               </a>
             </li>
           ))}
@@ -215,6 +221,7 @@ function SectionView({ section }: { section: Section }) {
 }
 
 export function ContentPageView({ page, eyebrow, aside }: { page: ContentPage; eyebrow?: ReactNode; aside?: ReactNode }) {
+  const { t } = useI18n();
   const chips = page.sections.filter((s) => s.chip);
   const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -224,7 +231,7 @@ export function ContentPageView({ page, eyebrow, aside }: { page: ContentPage; e
       <h1 className="c-page__title">{page.title}</h1>
       <p className="c-page__lead">{page.lead}</p>
       {chips.length > 0 && (
-        <nav className="c-page__chips" aria-label="Разделы">
+        <nav className="c-page__chips" aria-label={t.country.sectionsNav}>
           {chips.map((s) => (
             <button key={s.id} className="chip" onClick={() => jump(s.id)}>{s.chip}</button>
           ))}

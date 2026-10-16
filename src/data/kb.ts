@@ -1,10 +1,8 @@
 // База знаний для FAQ-бота: тот же контент, что показывает сайт,
 // нарезанный на фрагменты (раздел страницы или карточка страны).
-import { countries, docsFor } from './countries';
-import { countryDetails } from './countryDetails';
-import { commonApp } from './guides/commonApp';
-import { essay } from './guides/essay';
-import { recommendation } from './guides/recommendation';
+import { docItems, getCountries, getCountryPage, getGuides } from '../i18n/content';
+import { LOCALES, type Locale } from '../i18n/locales';
+import { dictionaries } from '../i18n/ui';
 import type { Block, ContentPage } from './types';
 
 export type KbChunk = { id: string; title: string; path: string; text: string };
@@ -41,61 +39,88 @@ function pageChunks(prefix: string, pageTitle: string, path: string, page: Conte
   }));
 }
 
-const degreeRu = { bachelor: 'бакалавриат', master: 'магистратура', phd: 'PhD' };
+// Подписи полей карточки страны на каждом языке
+const LABELS: Record<Locale, { country: string; grant: string; degrees: string; full: string; partial: string; ielts: string; deadlines: string; early: string; late: string; docs: string; links: string; guide: string }> = {
+  ru: { country: 'Страна', grant: 'Грант/программа', degrees: 'Ступени', full: 'Есть полные гранты.', partial: 'Частичные гранты и скидки вузов.', ielts: 'Минимальный IELTS', deadlines: 'Сроки', early: 'ранняя подача', late: 'дедлайн (ММ-ДД, ориентировочно)', docs: 'Документы', links: 'Официальные ссылки', guide: 'Гайд' },
+  en: { country: 'Country', grant: 'Scholarship/programme', degrees: 'Degrees', full: 'Full scholarships available.', partial: 'Partial grants and university discounts.', ielts: 'Minimum IELTS', deadlines: 'Deadlines', early: 'early deadline', late: 'deadline (MM-DD, approximate)', docs: 'Documents', links: 'Official links', guide: 'Guide' },
+  tj: { country: 'Кишвар', grant: 'Грант/барнома', degrees: 'Зинаҳо', full: 'Грантҳои пурра ҳастанд.', partial: 'Грантҳои қисман ва тахфифҳои донишгоҳҳо.', ielts: 'Ҳадди ақали IELTS', deadlines: 'Мӯҳлатҳо', early: 'аризаи барвақт', late: 'мӯҳлат (ММ-РР, тахминӣ)', docs: 'Ҳуҷҷатҳо', links: 'Пайвандҳои расмӣ', guide: 'Дастур' },
+};
 
-const countryChunks: KbChunk[] = countries.map((c) => ({
-  id: `country:${c.id}`,
-  title: `${c.name}: ${c.grant}`,
-  path: `/country/${c.id}`,
-  text: [
-    `Страна: ${c.name}. Грант/программа: ${c.grant}. ${c.tags}.`,
-    `Ступени: ${c.degrees.map((d) => degreeRu[d]).join(', ')}. ${c.fullGrant ? 'Есть полные гранты.' : 'Частичные гранты и скидки вузов.'}`,
-    c.ieltsMin ? `Минимальный IELTS: ${c.ieltsMin}.` : '',
-    c.gpaMin ? `GPA: ${c.gpaMin}.` : '',
-    `Сроки: ${c.deadlines.note ?? ''} (ранняя подача ${c.deadlines.early ?? '—'}, дедлайн ${c.deadlines.late}, формат ММ-ДД, ориентировочно).`,
-    `Документы: ${docsFor(c).join('; ')}.`,
-    c.links.length ? `Официальные ссылки: ${c.links.map((l) => `${l.label} ${l.url}`).join('; ')}.` : '',
-  ].filter(Boolean).join('\n'),
-}));
+function buildKnowledgeBase(locale: Locale): KbChunk[] {
+  const L = LABELS[locale];
+  const degreeNames = dictionaries[locale].degreeNames;
+  const countries = getCountries(locale);
 
-export const knowledgeBase: KbChunk[] = [
-  ...countryChunks,
-  ...Object.entries(countryDetails).flatMap(([id, page]) =>
-    pageChunks(id, countries.find((c) => c.id === id)?.name ?? id, `/country/${id}`, page),
-  ),
-  ...pageChunks('essay', 'Гайд: мотивационное эссе', '/guides/essay', essay),
-  ...pageChunks('recommendation', 'Гайд: рекомендательное письмо', '/guides/recommendation', recommendation),
-  ...pageChunks('common-app', 'Гайд: Common App', '/guides/common-app', commonApp),
-];
+  const countryChunks: KbChunk[] = countries.map((c) => ({
+    id: `country:${c.id}`,
+    title: `${c.name}: ${c.grant}`,
+    path: `/country/${c.id}`,
+    text: [
+      `${L.country}: ${c.name}. ${L.grant}: ${c.grant}. ${c.tags}.`,
+      `${L.degrees}: ${c.degrees.map((d) => degreeNames[d]).join(', ')}. ${c.fullGrant ? L.full : L.partial}`,
+      c.ieltsMin ? `${L.ielts}: ${c.ieltsMin}.` : '',
+      c.gpaMin ? `GPA: ${c.gpaMin}.` : '',
+      `${L.deadlines}: ${c.deadlines.note ?? ''} (${L.early} ${c.deadlines.early ?? '—'}, ${L.late} ${c.deadlines.late}).`,
+      `${L.docs}: ${docItems(c, locale).map((d) => d.label).join('; ')}.`,
+      c.links.length ? `${L.links}: ${c.links.map((l) => `${l.label} ${l.url}`).join('; ')}.` : '',
+    ].filter(Boolean).join('\n'),
+  }));
+
+  return [
+    ...countryChunks,
+    ...countries.flatMap((c) => {
+      const page = getCountryPage(locale, c.id);
+      return page ? pageChunks(c.id, c.name, `/country/${c.id}`, page) : [];
+    }),
+    ...getGuides(locale).flatMap((g) => (g.page ? pageChunks(g.slug, `${L.guide}: ${g.title}`, `/guides/${g.slug}`, g.page) : [])),
+  ];
+}
 
 // ---------- Поиск ----------
 // Лексический поиск без эмбеддингов: база маленькая, а запросы к модели эмбеддингов
-// тратили бы тот же дневной бюджет нейронов. Русская морфология грубо
-// учитывается обрезкой слов до основы (первые 4 буквы: «Корея», «Кореи» → «коре»),
-// а редкие слова весят больше частых (IDF), чтобы «IELTS» не находил все страны подряд.
+// тратили бы тот же дневной бюджет нейронов. Морфология грубо учитывается обрезкой
+// слов до основы (первые 4 буквы: «Корея», «Кореи» → «коре»), а редкие слова весят
+// больше частых (IDF), чтобы «IELTS» не находил все страны подряд.
 
-const STOP = new Set(['как', 'что', 'где', 'для', 'это', 'мне', 'или', 'нужно', 'нужен', 'нужна', 'можно', 'какой', 'какие', 'какая', 'если', 'когда', 'сколько', 'есть', 'the', 'and']);
+const STOP = new Set([
+  'как', 'что', 'где', 'для', 'это', 'мне', 'или', 'нужно', 'нужен', 'нужна', 'можно', 'какой', 'какие', 'какая', 'если', 'когда', 'сколько', 'есть',
+  'the', 'and', 'what', 'how', 'where', 'which', 'when', 'for', 'need', 'can', 'does', 'with', 'about',
+  'чӣ', 'чи', 'кадом', 'куҷо', 'барои', 'ман', 'кай', 'чанд', 'лозим', 'аст', 'ҳаст',
+]);
 
 export const stems = (s: string) =>
   s
     .toLowerCase()
     .replace(/ё/g, 'е')
-    .split(/[^a-zа-я0-9]+/i)
+    .split(/[^a-zа-яғӣқӯҳҷ0-9]+/i)
     .filter((w) => w.length >= 3 && !STOP.has(w))
     .map((w) => w.slice(0, 4));
 
-const index = knowledgeBase.map((c) => ({ chunk: c, titleStems: new Set(stems(c.title)), bodyStems: stems(c.text) }));
+type Index = { entries: { chunk: KbChunk; titleStems: Set<string>; bodyStems: string[] }[]; idf: (w: string) => number };
 
-const docFreq = new Map<string, number>();
-for (const { titleStems, bodyStems } of index) {
-  for (const w of new Set([...titleStems, ...bodyStems])) docFreq.set(w, (docFreq.get(w) ?? 0) + 1);
+function buildIndex(kb: KbChunk[]): Index {
+  const entries = kb.map((c) => ({ chunk: c, titleStems: new Set(stems(c.title)), bodyStems: stems(c.text) }));
+  const docFreq = new Map<string, number>();
+  for (const { titleStems, bodyStems } of entries) {
+    for (const w of new Set([...titleStems, ...bodyStems])) docFreq.set(w, (docFreq.get(w) ?? 0) + 1);
+  }
+  return { entries, idf: (w) => Math.log(1 + entries.length / (docFreq.get(w) ?? entries.length)) };
 }
-const idf = (w: string) => Math.log(1 + index.length / (docFreq.get(w) ?? index.length));
 
-export function searchKb(query: string, limit = 4): KbChunk[] {
+// Индексы строятся при первом запросе на каждом языке
+const indexes = new Map<Locale, Index>();
+const indexFor = (locale: Locale) => {
+  if (!indexes.has(locale)) indexes.set(locale, buildIndex(buildKnowledgeBase(locale)));
+  return indexes.get(locale)!;
+};
+
+export const knowledgeBaseSize = () => LOCALES.map((l) => [l, indexFor(l).entries.length] as const);
+
+export function searchKb(query: string, locale: Locale = 'ru', limit = 4): KbChunk[] {
   const q = [...new Set(stems(query))];
   if (!q.length) return [];
-  return index
+  const { entries, idf } = indexFor(locale);
+  return entries
     .map(({ chunk, titleStems, bodyStems }) => {
       let score = 0;
       for (const w of q) {

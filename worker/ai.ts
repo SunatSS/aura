@@ -6,7 +6,14 @@
 export type ChatInput = { system: string; user: string; maxTokens: number; json?: boolean };
 export type ChatResult = { text: string; provider: 'workers-ai' | 'gemini' };
 
-export class AiUnavailableError extends Error {}
+// reason: 'unavailable' — модель не ответила, 'budget' — исчерпан общий дневной лимит
+export class AiUnavailableError extends Error {
+  reason: 'unavailable' | 'budget';
+  constructor(reason: 'unavailable' | 'budget') {
+    super(reason);
+    this.reason = reason;
+  }
+}
 
 export const utcDay = () => new Date().toISOString().slice(0, 10);
 
@@ -128,11 +135,11 @@ export async function chat(env: Env, input: ChatInput): Promise<ChatResult> {
       if (text.trim()) return { text, provider: 'workers-ai' };
     } catch (err) {
       console.error('Workers AI failed', err);
-      if (!hasGemini) throw new AiUnavailableError('AI сейчас недоступен, попробуй через пару минут.');
+      if (!hasGemini) throw new AiUnavailableError('unavailable');
     }
   }
 
-  if (!hasGemini) throw new AiUnavailableError('Дневной лимит AI на всю платформу исчерпан — он обновится в 00:00 UTC.');
+  if (!hasGemini) throw new AiUnavailableError('budget');
 
   try {
     const text = await runGemini(env, input);
@@ -140,7 +147,7 @@ export async function chat(env: Env, input: ChatInput): Promise<ChatResult> {
     return { text, provider: 'gemini' };
   } catch (err) {
     console.error('Gemini failed', err);
-    throw new AiUnavailableError('AI сейчас недоступен, попробуй через пару минут.');
+    throw new AiUnavailableError('unavailable');
   }
 }
 

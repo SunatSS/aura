@@ -1,3 +1,5 @@
+import { splitLocale } from '../i18n/locales';
+import { dictionaries } from '../i18n/ui';
 import type { AiMeta, AiQuota, CvPack, EssayReview, FaqAnswer, MeResponse, Profile, TrackerItem } from './types';
 
 export class ApiError extends Error {
@@ -8,20 +10,25 @@ export class ApiError extends Error {
   }
 }
 
+// Язык берём из адреса страницы: сервер отвечает ошибками и AI-ответами на нём
+export const currentLocale = () => splitLocale(window.location.pathname).locale;
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const locale = currentLocale();
+  const t = dictionaries[locale].common;
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
       method,
       credentials: 'same-origin',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: { 'X-Locale': locale, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError(0, 'Нет связи с сервером. Проверь интернет.');
+    throw new ApiError(0, t.offline);
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error ?? 'Что-то пошло не так.');
+  if (!res.ok) throw new ApiError(res.status, data.error ?? t.error);
   return data as T;
 }
 

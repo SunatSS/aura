@@ -33,4 +33,3 @@ export function nextDate(mmdd: string, from = new Date()): Date {
 export const daysUntil = (date: Date, from = new Date()) =>
   Math.ceil((date.getTime() - new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime()) / 86_400_000);
 
-export const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });

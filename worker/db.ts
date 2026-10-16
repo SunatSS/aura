@@ -1,5 +1,6 @@
 // Запросы к D1. Формы ответов совпадают с типами фронтенда (src/api/types.ts).
 import type { Profile, TrackerItem, User } from '../src/api/types';
+import { countryById, normalizeDocId } from '../src/data/countries';
 
 type UserRow = { id: string; email: string; name: string; password_hash: string; password_salt: string };
 type TrackerRow = { country_id: string; added_at: string; submitted: number; done_docs: string };
@@ -51,12 +52,17 @@ export async function saveProfile(db: D1Database, userId: string, p: Profile) {
     .run();
 }
 
-const toItem = (r: TrackerRow): TrackerItem => ({
-  countryId: r.country_id,
-  addedAt: r.added_at,
-  submitted: r.submitted === 1,
-  done: JSON.parse(r.done_docs),
-});
+function toItem(r: TrackerRow): TrackerItem {
+  const country = countryById(r.country_id);
+  const raw: string[] = JSON.parse(r.done_docs);
+  return {
+    countryId: r.country_id,
+    addedAt: r.added_at,
+    submitted: r.submitted === 1,
+    // старые записи хранили русские подписи документов — отдаём стабильные id
+    done: country ? raw.map((d) => normalizeDocId(country, d)).filter((d): d is string => d !== null) : raw,
+  };
+}
 
 export async function getTracker(db: D1Database, userId: string): Promise<TrackerItem[]> {
   const { results } = await db

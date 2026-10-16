@@ -1,7 +1,8 @@
 // HTML-страницы, sitemap.xml и robots.txt.
 // SPA отдаёт один index.html на все адреса, поэтому Worker подставляет в него
 // title, description, canonical, Open Graph и JSON-LD конкретной страницы.
-import { metaFor, publicPaths, SITE_NAME, type PageMeta } from '../src/seo/meta';
+import { LOCALE_META, LOCALES } from '../src/i18n/locales';
+import { alternates, metaFor, publicBarePaths, SITE_NAME, type PageMeta } from '../src/seo/meta';
 
 const siteUrl = (env: Env, request: Request) => (env.SITE_URL || new URL(request.url).origin).replace(/\/$/, '');
 
@@ -14,10 +15,18 @@ function headTags(meta: PageMeta, site: string) {
   return [
     `<meta name="description" content="${attr(meta.description)}">`,
     ...(meta.noindex ? [] : [`<link rel="canonical" href="${attr(url)}">`]),
+    // языковые версии страницы: поисковик покажет пользователю нужную
+    ...(meta.noindex
+      ? []
+      : [
+          ...alternates(meta.barePath).map((a) => `<link rel="alternate" hreflang="${LOCALE_META[a.locale].htmlLang}" href="${attr(site + a.path)}">`),
+          `<link rel="alternate" hreflang="x-default" href="${attr(site + meta.barePath)}">`,
+        ]),
     meta.noindex ? '<meta name="robots" content="noindex, follow">' : '<meta name="robots" content="index, follow, max-image-preview:large">',
     `<meta property="og:type" content="website">`,
     `<meta property="og:site_name" content="${SITE_NAME}">`,
-    `<meta property="og:locale" content="ru_RU">`,
+    `<meta property="og:locale" content="${LOCALE_META[meta.locale].ogLocale}">`,
+    ...LOCALES.filter((l) => l !== meta.locale).map((l) => `<meta property="og:locale:alternate" content="${LOCALE_META[l].ogLocale}">`),
     `<meta property="og:title" content="${attr(meta.title)}">`,
     `<meta property="og:description" content="${attr(meta.description)}">`,
     `<meta property="og:url" content="${attr(url)}">`,
@@ -40,6 +49,11 @@ export async function renderPage(request: Request, env: Env): Promise<Response> 
   // index.html из статики (assets отдают его на «/»)
   const shell = await env.ASSETS.fetch(new Request(new URL('/', url), { headers: request.headers }));
   const res = new HTMLRewriter()
+    .on('html', {
+      element(el) {
+        el.setAttribute('lang', LOCALE_META[meta.locale].htmlLang);
+      },
+    })
     .on('title', {
       element(el) {
         el.setInnerContent(meta.title);
@@ -67,13 +81,12 @@ export async function renderPage(request: Request, env: Env): Promise<Response> 
 
 export function robots(request: Request, env: Env) {
   const site = siteUrl(env, request);
+  const privatePaths = ['/dashboard', '/onboarding', '/mentor'];
   const body = [
     'User-agent: *',
     'Allow: /',
     'Disallow: /api/',
-    'Disallow: /dashboard',
-    'Disallow: /onboarding',
-    'Disallow: /mentor',
+    ...privatePaths.flatMap((p) => ['', '/en', '/tj'].map((prefix) => `Disallow: ${prefix}${p}`)),
     '',
     `Sitemap: ${site}/sitemap.xml`,
     '',
@@ -83,9 +96,18 @@ export function robots(request: Request, env: Env) {
 
 export function sitemap(request: Request, env: Env) {
   const site = siteUrl(env, request);
-  const urls = publicPaths()
-    .map((p) => `  <url><loc>${site}${p}</loc><changefreq>${p === '/' ? 'weekly' : 'monthly'}</changefreq><priority>${p === '/' ? '1.0' : p.startsWith('/country/') ? '0.8' : '0.6'}</priority></url>`)
+  // каждая страница на каждом языке + ссылки на все её языковые версии
+  const urls = publicBarePaths()
+    .flatMap((bare) => {
+      const alts = alternates(bare)
+        .map((a) => `<xhtml:link rel="alternate" hreflang="${LOCALE_META[a.locale].htmlLang}" href="${site}${a.path}"/>`)
+        .join('');
+      const priority = bare === '/' ? '1.0' : bare.startsWith('/country/') ? '0.8' : '0.6';
+      return alternates(bare).map(
+        (a) => `  <url><loc>${site}${a.path}</loc>${alts}<changefreq>${bare === '/' ? 'weekly' : 'monthly'}</changefreq><priority>${priority}</priority></url>`,
+      );
+    })
     .join('\n');
-  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}\n</urlset>\n`;
   return new Response(body, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
 }

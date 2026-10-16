@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, currentLocale } from '../api/client';
+import { dictionaries } from '../i18n/ui';
 import type { MeResponse, Profile, TrackerItem, User } from '../api/types';
 
 // Состояние пользователя живёт на сервере (Cloudflare Worker + D1).
@@ -25,7 +26,7 @@ type Store = State & {
 
 const Ctx = createContext<Store | null>(null);
 
-const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Что-то пошло не так.');
+const message = (e: unknown) => (e instanceof ApiError ? e.message : dictionaries[currentLocale()].common.error);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(empty);
