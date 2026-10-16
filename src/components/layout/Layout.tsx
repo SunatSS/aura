@@ -4,22 +4,24 @@ import { useI18n } from '../../i18n/I18n';
 import { LOCALE_META, LOCALES } from '../../i18n/locales';
 import { useStore } from '../../store/AppStore';
 import { CONTACT_EMAIL, ICONS, SOCIALS, TELEGRAM_URL } from './Social';
+import { LOGO_ORANGE, SPARK_PATHS, STAR_OFFSET, STAR_PATH, WORD_PATH } from './logoPaths';
 import './layout.css';
 
 export function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
   const { t, path } = useI18n();
   return (
     <Link to={path('/')} className={`logo logo--${size}`} aria-label={t.header.home}>
-      <svg className="logo__burst" viewBox="0 0 40 40" aria-hidden="true">
-        <path
-          d="M20 1 L24 13 L36 6 L29 18 L39 22 L27 25 L32 38 L21 29 L13 39 L14 26 L1 27 L11 18 L3 8 L16 12 Z"
-          fill="var(--orange)"
-          stroke="var(--ink)"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
+      <svg className="logo__svg" viewBox="0 0 107 52" aria-hidden="true">
+        <g transform={STAR_OFFSET} stroke="var(--ink)" strokeWidth="0.707">
+          <path d={STAR_PATH} transform="translate(1.413 1.413)" fill="var(--ink)" />
+          <path d={STAR_PATH} fill={LOGO_ORANGE} />
+        </g>
+        <path d={WORD_PATH} transform="translate(1.465 1.465)" fill="var(--ink)" stroke="var(--ink)" strokeWidth="1.06" />
+        <path d={WORD_PATH} fill="var(--white)" stroke="var(--ink)" strokeWidth="1.06" style={{ paintOrder: 'stroke' }} />
+        <g stroke="currentColor" strokeWidth="1.767" strokeLinecap="round">
+          {SPARK_PATHS.map((d) => <path key={d} d={d} />)}
+        </g>
       </svg>
-      <span className="logo__word">AURA</span>
     </Link>
   );
 }
